@@ -4,15 +4,17 @@
 - [x] Inicializar proyecto Next.js
 - [x] Configurar GitHub y Vercel
 - [x] Crear página de inicio básica
+- [x] Implementar estructura básica de la aplicación
+- [x] Configurar navegación entre páginas
 
 ## Fase 2: Desarrollo de Funcionalidades Core
-- [ ] Implementar generación de cuentos básica
-- [ ] Crear interfaz de usuario para la generación de cuentos
+- [x] Implementar sistema de autenticación básico
+- [x] Crear interfaz de usuario para la generación de cuentos
 - [ ] Integrar API de Claude para la generación de texto
 
 ## Fase 3: Autenticación y Perfiles de Usuario
-- [ ] Implementar sistema de registro y login
-- [ ] Crear perfiles de usuario
+- [x] Implementar sistema de registro y login
+- [ ] Crear perfiles de usuario detallados
 - [ ] Permitir guardar cuentos generados
 
 ## Fase 4: Mejoras y Características Adicionales
