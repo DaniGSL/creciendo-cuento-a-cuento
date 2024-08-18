@@ -20,8 +20,15 @@ const handler = NextAuth({
       }
     })
   ],
+  secret: process.env.NEXTAUTH_SECRET,
   pages: {
     signIn: '/login',
+  },
+  callbacks: {
+    async signIn({ user, account, profile, email, credentials }) {
+      console.log("Intento de inicio de sesión:", { user, account, profile, email })
+      return true
+    },
   }
 })
 
