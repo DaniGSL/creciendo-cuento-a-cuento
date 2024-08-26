@@ -13,9 +13,12 @@ declare module "next-auth" {
   }
 }
 
+console.log("NEXTAUTH_SECRET is set:", !!process.env.NEXTAUTH_SECRET);
+
 if (!process.env.NEXTAUTH_SECRET) {
-  throw new Error("NEXTAUTH_SECRET is not set")
-}
+    console.error("NEXTAUTH_SECRET is not set");
+    throw new Error("NEXTAUTH_SECRET is not set");
+  }
 
 const handler = NextAuth({
   providers: [
