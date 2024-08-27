@@ -1,4 +1,4 @@
-import NextAuth, { DefaultSession } from "next-auth"
+import NextAuth, { DefaultSession, NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 
 // Extender la definición de tipos para incluir 'id' en el usuario
@@ -13,14 +13,11 @@ declare module "next-auth" {
   }
 }
 
-console.log("NEXTAUTH_SECRET is set:", !!process.env.NEXTAUTH_SECRET);
-
 if (!process.env.NEXTAUTH_SECRET) {
-    console.error("NEXTAUTH_SECRET is not set");
-    throw new Error("NEXTAUTH_SECRET is not set");
-  }
+  throw new Error("NEXTAUTH_SECRET must be set")
+}
 
-const handler = NextAuth({
+const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
       name: 'Credentials',
@@ -30,10 +27,11 @@ const handler = NextAuth({
       },
       async authorize(credentials, req) {
         if (credentials?.username && credentials?.password) {
+          // Aquí deberías implementar la lógica real de autenticación
+          // Por ejemplo, verificar contra una base de datos
           return { id: "1", name: credentials.username, email: `${credentials.username}@example.com` }
-        } else {
-          return null
         }
+        return null
       }
     })
   ],
@@ -62,7 +60,9 @@ const handler = NextAuth({
       return session
     },
   },
-  ...(process.env.NEXTAUTH_URL ? { url: process.env.NEXTAUTH_URL } : {}),
-})
+  debug: process.env.NODE_ENV === 'development',
+}
+
+const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST }
