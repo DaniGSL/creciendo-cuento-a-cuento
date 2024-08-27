@@ -2,6 +2,8 @@
 'use client';
 
 import React, { useState } from 'react';
+import axios from 'axios';
+import { jsPDF } from "jspdf";
 
 interface Character {
   id: string;
@@ -18,8 +20,10 @@ const GenerateTaleForm: React.FC = () => {
   const [educationLevel, setEducationLevel] = useState('');
   const [language, setLanguage] = useState('');
   const [readingTime, setReadingTime] = useState(10);
-  const [savedCharacters, setSavedCharacters] = useState<Character[]>([]); // Simulación de personajes guardados
+  const [savedCharacters, setSavedCharacters] = useState<Character[]>([]);
   const [selectedSavedCharacter, setSelectedSavedCharacter] = useState<string>('');
+  const [generatedStory, setGeneratedStory] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleAddCharacter = () => {
     if (newCharacter.name && newCharacter.description) {
@@ -51,19 +55,52 @@ const GenerateTaleForm: React.FC = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const generatePDF = () => {
+    const doc = new jsPDF();
+    
+    doc.setFontSize(20);
+    doc.text("Mi cuento generado", 20, 20);
+    
+    doc.setFontSize(12);
+    const splitText = doc.splitTextToSize(generatedStory, 180);
+    doc.text(splitText, 10, 30);
+    
+    doc.save("mi_cuento.pdf");
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // Aquí irá la lógica para enviar los datos a la API de generación de cuentos
+    setIsLoading(true);
+
+    const characterDescriptions = characters.map(char => `${char.name}: ${char.description}`).join('\n');
+    const prompt = `Genera una historia completa que ocurra en ${location}.
+    Los personajes principales son: ${characters.map(char => char.name).join(', ')}.
+    La historia debe ser apropiada para un nivel educativo ${educationLevel} y estar escrita en ${language}.
+    La longitud aproximada debe ser de ${readingTime * 100} palabras.
+    La historia debe tener un inicio, desarrollo y un final feliz.
+    No incluyas ningún texto introductorio o de cierre fuera de la historia en sí.
+    Información adicional sobre los personajes:
+    ${characterDescriptions}
+    Por favor, genera la historia completa basándote en esta información.`;
+
+    try {
+      const response = await axios.post('/api/generate-story', { prompt });
+      setGeneratedStory(response.data.story);
+    } catch (error) {
+      console.error('Error al generar el cuento:', error);
+      // Aquí puedes manejar el error, por ejemplo, mostrando un mensaje al usuario
+    } finally {
+      setIsLoading(false);
+    }
+
     const charactersToSave = characters.filter(char => char.saved);
     setSavedCharacters([...savedCharacters, ...charactersToSave]);
-    console.log('Datos del formulario:', { characters, genre, location, educationLevel, language, readingTime });
-    console.log('Personajes guardados:', charactersToSave);
   };
 
   return (
     <form onSubmit={handleSubmit} className="max-w-2xl mx-auto mt-8 p-6 bg-white rounded-lg shadow-md">
       <h2 className="text-2xl font-bold mb-6 text-[#28405F]">Generar Cuento</h2>
-      
+
       {/* Sección de personajes */}
       <div className="mb-6">
         <h3 className="text-xl font-semibold mb-2 text-[#3F69D9]">Personajes</h3>
@@ -218,9 +255,24 @@ const GenerateTaleForm: React.FC = () => {
       <button
         type="submit"
         className="w-full py-2 px-4 bg-[#3F69D9] text-white rounded hover:bg-[#28405F]"
+        disabled={isLoading}
       >
-        Generar Cuento
+        {isLoading ? 'Generando...' : 'Generar Cuento'}
       </button>
+
+      {/* Mostrar la historia generada */}
+      {generatedStory && (
+        <div className="mt-8">
+          <h3 className="text-xl font-semibold mb-2 text-[#3F69D9]">Historia Generada</h3>
+          <p className="whitespace-pre-wrap">{generatedStory}</p>
+          <button 
+            onClick={generatePDF}
+            className="mt-4 px-4 py-2 bg-[#3D8BF2] text-white rounded hover:bg-[#3F69D9]"
+          >
+            Descargar PDF
+          </button>
+        </div>
+      )}
     </form>
   );
 };
