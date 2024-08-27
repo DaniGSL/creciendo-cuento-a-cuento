@@ -1,4 +1,6 @@
 // src/app/components/GenerateTaleForm.tsx
+'use client'; // Añade esta línea al principio del archivo
+
 import React, { useState } from 'react';
 
 interface Character {
