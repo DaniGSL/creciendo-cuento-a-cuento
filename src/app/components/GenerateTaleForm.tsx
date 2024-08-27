@@ -1,33 +1,52 @@
-'use client';
+// src/app/components/GenerateTaleForm.tsx
 import React, { useState } from 'react';
 
 interface Character {
+  id: string;
   name: string;
   description: string;
 }
 
 const GenerateTaleForm: React.FC = () => {
   const [characters, setCharacters] = useState<Character[]>([]);
-  const [newCharacter, setNewCharacter] = useState<Character>({ name: '', description: '' });
-  const [genre, setGenre] = useState<string>('');
-  const [location, setLocation] = useState<string>('');
-  const [educationLevel, setEducationLevel] = useState<string>('');
-  const [language, setLanguage] = useState<string>('');
-  const [readingTime, setReadingTime] = useState<number>(10);
+  const [newCharacter, setNewCharacter] = useState<Character>({ id: '', name: '', description: '' });
+  const [genre, setGenre] = useState('');
+  const [location, setLocation] = useState('');
+  const [educationLevel, setEducationLevel] = useState('');
+  const [language, setLanguage] = useState('');
+  const [readingTime, setReadingTime] = useState(10);
+  const [savedCharacters, setSavedCharacters] = useState<Character[]>([]); // Simulación de personajes guardados
+  const [selectedSavedCharacter, setSelectedSavedCharacter] = useState<string>('');
+  const [saveNewCharacter, setSaveNewCharacter] = useState(false);
 
-  const handleAddCharacter = (): void => {
+  const handleAddCharacter = () => {
     if (newCharacter.name && newCharacter.description) {
-      setCharacters([...characters, newCharacter]);
-      setNewCharacter({ name: '', description: '' });
+      const characterToAdd = { ...newCharacter, id: Date.now().toString() };
+      setCharacters([...characters, characterToAdd]);
+      if (saveNewCharacter) {
+        setSavedCharacters([...savedCharacters, characterToAdd]);
+      }
+      setNewCharacter({ id: '', name: '', description: '' });
+      setSaveNewCharacter(false);
     }
   };
 
-  const handleRemoveCharacter = (index: number): void => {
-    const updatedCharacters = characters.filter((_, i) => i !== index);
-    setCharacters(updatedCharacters);
+  const handleRemoveCharacter = (id: string) => {
+    setCharacters(characters.filter(char => char.id !== id));
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
+  const handleSelectSavedCharacter = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedId = e.target.value;
+    setSelectedSavedCharacter(selectedId);
+    if (selectedId) {
+      const selectedChar = savedCharacters.find(char => char.id === selectedId);
+      if (selectedChar && !characters.some(char => char.id === selectedChar.id)) {
+        setCharacters([...characters, selectedChar]);
+      }
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     // Aquí irá la lógica para enviar los datos a la API de generación de cuentos
     console.log('Datos del formulario:', { characters, genre, location, educationLevel, language, readingTime });
@@ -63,13 +82,34 @@ const GenerateTaleForm: React.FC = () => {
             Añadir
           </button>
         </div>
+        <div className="mb-2">
+          <label className="flex items-center">
+            <input
+              type="checkbox"
+              checked={saveNewCharacter}
+              onChange={(e) => setSaveNewCharacter(e.target.checked)}
+              className="mr-2"
+            />
+            Guardar este personaje para futuros cuentos
+          </label>
+        </div>
+        <select
+          value={selectedSavedCharacter}
+          onChange={handleSelectSavedCharacter}
+          className="w-full p-2 border rounded mb-2"
+        >
+          <option value="">Seleccionar personaje guardado</option>
+          {savedCharacters.map(char => (
+            <option key={char.id} value={char.id}>{char.name}</option>
+          ))}
+        </select>
         <ul className="list-disc pl-5">
-          {characters.map((char, index) => (
-            <li key={index} className="mb-1">
+          {characters.map((char) => (
+            <li key={char.id} className="mb-1">
               {char.name} - {char.description}
               <button
                 type="button"
-                onClick={() => handleRemoveCharacter(index)}
+                onClick={() => handleRemoveCharacter(char.id)}
                 className="ml-2 text-[#F24949] hover:text-red-700"
               >
                 Eliminar
