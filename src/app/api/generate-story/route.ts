@@ -1,15 +1,8 @@
 // src/app/api/generate-story/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { generateStory } from '../../services/chatgptService';
+import { generateStory } from '@/app/services/chatgptService';
 
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '1mb',
-    },
-    responseLimit: false,
-  },
-}
+export const runtime = 'edge'; // Opcional: usa el runtime de Edge si lo prefieres
 
 export async function POST(request: NextRequest) {
   try {
