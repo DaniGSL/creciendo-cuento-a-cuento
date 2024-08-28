@@ -56,7 +56,8 @@ const GenerateTaleForm: React.FC = () => {
     }
   };
 
-  const generatePDF = () => {
+  const generatePDF = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault(); // Previene el reenvío del formulario
     const doc = new jsPDF();
     
     doc.setFontSize(20);
@@ -67,6 +68,14 @@ const GenerateTaleForm: React.FC = () => {
     doc.text(splitText, 10, 30);
     
     doc.save("mi_cuento.pdf");
+  };
+
+  const handleSaveStory = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault(); // Previene el reenvío del formulario
+    // Aquí iría la lógica para guardar el cuento en la biblioteca
+    console.log('Guardando cuento en la biblioteca:', generatedStory);
+    // Por ahora, solo mostraremos un mensaje de éxito
+    alert('Cuento guardado en la biblioteca');
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -274,12 +283,20 @@ const GenerateTaleForm: React.FC = () => {
         <div className="mt-8">
           <h3 className="text-xl font-semibold mb-2 text-[#3F69D9]">Historia Generada</h3>
           <p className="whitespace-pre-wrap">{generatedStory}</p>
-          <button 
-            onClick={generatePDF}
-            className="mt-4 px-4 py-2 bg-[#3D8BF2] text-white rounded hover:bg-[#3F69D9]"
-          >
-            Descargar PDF
-          </button>
+          <div className="mt-4 flex space-x-4">
+            <button 
+              onClick={generatePDF}
+              className="px-4 py-2 bg-[#3D8BF2] text-white rounded hover:bg-[#3F69D9]"
+            >
+              Descargar PDF
+            </button>
+            <button 
+              onClick={handleSaveStory}
+              className="px-4 py-2 bg-[#28405F] text-white rounded hover:bg-[#3F69D9]"
+            >
+              Guardar en Biblioteca
+            </button>
+          </div>
         </div>
       )}
     </form>
