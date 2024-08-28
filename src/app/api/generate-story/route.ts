@@ -1,5 +1,5 @@
 // src/app/api/generate-story/route.ts
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { generateStory } from '../../services/chatgptService';
 
 export const config = {
@@ -7,11 +7,11 @@ export const config = {
     bodyParser: {
       sizeLimit: '1mb',
     },
-    responseLimit: '8mb',
+    responseLimit: false,
   },
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const { prompt } = await request.json();
     console.log('Prompt recibido:', prompt); // Para depuración
