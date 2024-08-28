@@ -24,6 +24,7 @@ const GenerateTaleForm: React.FC = () => {
   const [selectedSavedCharacter, setSelectedSavedCharacter] = useState<string>('');
   const [generatedStory, setGeneratedStory] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleAddCharacter = () => {
     if (newCharacter.name && newCharacter.description) {
@@ -71,6 +72,7 @@ const GenerateTaleForm: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
 
     const characterDescriptions = characters.map(char => `${char.name}: ${char.description}`).join('\n');
     const prompt = `Genera una historia completa que ocurra en ${location}.
@@ -88,7 +90,7 @@ const GenerateTaleForm: React.FC = () => {
       setGeneratedStory(response.data.story);
     } catch (error) {
       console.error('Error al generar el cuento:', error);
-      // Aquí puedes manejar el error, por ejemplo, mostrando un mensaje al usuario
+      setError('Hubo un error al generar el cuento. Por favor, inténtalo de nuevo.');
     } finally {
       setIsLoading(false);
     }
@@ -259,6 +261,13 @@ const GenerateTaleForm: React.FC = () => {
       >
         {isLoading ? 'Generando...' : 'Generar Cuento'}
       </button>
+
+      {/* Mostrar error si existe */}
+      {error && (
+        <div className="mt-4 p-2 bg-red-100 border border-red-400 text-red-700 rounded">
+          {error}
+        </div>
+      )}
 
       {/* Mostrar la historia generada */}
       {generatedStory && (
