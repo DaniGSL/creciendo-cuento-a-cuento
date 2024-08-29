@@ -60,14 +60,26 @@ const GenerateTaleForm: React.FC = () => {
     e.preventDefault(); // Previene el reenvío del formulario
     const doc = new jsPDF();
     
+    const lines = generatedStory.split('\n');
+    const title = lines[0].trim();
+    const content = lines.slice(1).join('\n').trim();
+
     doc.setFontSize(20);
-    doc.text("Mi cuento generado", 20, 20);
-    
+    doc.text(title, 20, 20);
+
     doc.setFontSize(12);
-    const splitText = doc.splitTextToSize(generatedStory, 180);
-    doc.text(splitText, 10, 30);
-    
-    doc.save("mi_cuento.pdf");
+    const splitContent = doc.splitTextToSize(content, 180);
+    let y = 40;
+    splitContent.forEach((line: string) => {
+      if (y > 280) {
+        doc.addPage();
+        y = 20;
+      }
+      doc.text(line, 10, y);
+      y += 7;
+    });
+
+    doc.save(`${title}.pdf`);
   };
 
   const handleSaveStory = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -89,6 +101,7 @@ const GenerateTaleForm: React.FC = () => {
     La historia debe ser apropiada para un nivel educativo ${educationLevel} y estar escrita en ${language}.
     La longitud aproximada debe ser de ${readingTime * 100} palabras.
     La historia debe tener un inicio, desarrollo y un final feliz.
+    Genera un título creativo para la historia y colócalo en la primera línea, seguido de un salto de línea.
     No incluyas ningún texto introductorio o de cierre fuera de la historia en sí.
     Información adicional sobre los personajes:
     ${characterDescriptions}
@@ -99,7 +112,7 @@ const GenerateTaleForm: React.FC = () => {
       setGeneratedStory(response.data.story);
     } catch (error) {
       console.error('Error al generar el cuento:', error);
-      setError('Hubo un error al generar el cuento. Por favor, inténtalo de nuevo.');
+      setError('Hubo un error al generar el cuento. Por favor, inténtalo de nuevo. Si el error persiste, ponte en contacto con nosotros.');
     } finally {
       setIsLoading(false);
     }
