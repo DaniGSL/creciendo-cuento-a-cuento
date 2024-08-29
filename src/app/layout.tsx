@@ -19,7 +19,9 @@ export default function RootLayout({
           <header className="bg-[#3F69D9] p-4 text-white sticky top-0 z-50">
             <div className="container mx-auto">
               <div className="flex flex-col sm:flex-row justify-between items-center">
-                <h1 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-0">Creciendo cuento a cuento</h1>
+                <h1 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-0 whitespace-nowrap overflow-hidden text-ellipsis">
+                  Creciendo cuento a cuento
+                </h1>
                 <Nav />
               </div>
             </div>
