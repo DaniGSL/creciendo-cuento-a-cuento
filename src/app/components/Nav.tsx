@@ -2,10 +2,17 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useSession, signOut } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 
 export default function Nav() {
   const { data: session } = useSession()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const router = useRouter()
+
+  const handleSignOut = async () => {
+    await signOut({ redirect: false })
+    router.push('/')
+  }
 
   return (
     <nav className="w-full flex flex-col items-center">
@@ -33,7 +40,7 @@ export default function Nav() {
           </ul>
           <ul className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 mt-2 sm:mt-0">
             {session ? (
-              <li><button onClick={() => signOut()} className="block py-1 hover:underline">Cerrar sesión</button></li>
+              <li><button onClick={handleSignOut} className="block py-1 hover:underline">Cerrar sesión</button></li>
             ) : (
               <>
                 <li><Link href="/login" className="block py-1 hover:underline">Iniciar sesión</Link></li>
