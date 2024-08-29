@@ -96,7 +96,7 @@ const GenerateTaleForm: React.FC = () => {
     setError(null);
 
     const characterDescriptions = characters.map(char => `${char.name}: ${char.description}`).join('\n');
-    const prompt = `Genera una historia completa que ocurra en ${location}.
+    const prompt = `Genera una historia completa de ${genre} que ocurra en ${location}.
     Los personajes principales son: ${characters.map(char => char.name).join(', ')}.
     La historia debe ser apropiada para un nivel educativo ${educationLevel} y estar escrita en ${language}.
     La longitud aproximada debe ser de ${readingTime * 100} palabras.
