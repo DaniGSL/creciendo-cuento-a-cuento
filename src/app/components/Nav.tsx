@@ -19,8 +19,8 @@ export default function Nav() {
         >
           ☰
         </button>
-        <ul className={`${isMenuOpen ? 'flex' : 'hidden'} sm:flex flex-col sm:flex-row w-full sm:w-auto space-y-2 sm:space-y-0 sm:space-x-4 mt-2 sm:mt-0 items-start sm:items-center`}>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center sm:space-x-4">
+        <div className={`${isMenuOpen ? 'flex' : 'hidden'} sm:flex flex-col sm:flex-row w-full justify-between items-start sm:items-center mt-2 sm:mt-0`}>
+          <ul className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
             <li><Link href="/" className="block py-1 hover:underline">Inicio</Link></li>
             {session && (
               <>
@@ -30,19 +30,19 @@ export default function Nav() {
                 <li><Link href="/biblioteca" className="block py-1 hover:underline">Biblioteca</Link></li>
               </>
             )}
-          </div>
-          <div className="flex flex-col sm:flex-row items-end sm:items-center sm:ml-auto">
+          </ul>
+          <ul className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 mt-2 sm:mt-0">
             {session ? (
-              <li className="mr-4"><button onClick={() => signOut()} className="block py-1 hover:underline">Cerrar sesión</button></li>
+              <li><button onClick={() => signOut()} className="block py-1 hover:underline">Cerrar sesión</button></li>
             ) : (
               <>
-                <li className="mr-4"><Link href="/login" className="block py-1 hover:underline">Iniciar sesión</Link></li>
-                <li className="mr-4"><Link href="/registro" className="block py-1 hover:underline">Registrarse</Link></li>
+                <li><Link href="/login" className="block py-1 hover:underline">Iniciar sesión</Link></li>
+                <li><Link href="/registro" className="block py-1 hover:underline">Registrarse</Link></li>
               </>
             )}
             <li><Link href="/contacto" className="block py-1 hover:underline">Contacto</Link></li>
-          </div>
-        </ul>
+          </ul>
+        </div>
       </div>
     </nav>
   )
