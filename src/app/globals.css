@@ -1,13 +1,16 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Directivas de Tailwind */
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
 
+/* Variables CSS personalizadas */
 :root {
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb: 255, 255, 255;
 }
 
+/* Estilos para el modo oscuro */
 @media (prefers-color-scheme: dark) {
   :root {
     --foreground-rgb: 255, 255, 255;
@@ -16,18 +19,28 @@
   }
 }
 
+/* Estilos globales */
 body {
   color: rgb(var(--foreground-rgb));
   background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+    to bottom,
+    transparent,
+    rgb(var(--background-end-rgb))
+  ) rgb(var(--background-start-rgb));
+  font-size: 16px;
+  line-height: 1.5;
 }
 
+/* Utilidades personalizadas */
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+}
+
+/* Estilos responsivos */
+@media (max-width: 640px) {
+  body {
+    font-size: 14px;
   }
 }

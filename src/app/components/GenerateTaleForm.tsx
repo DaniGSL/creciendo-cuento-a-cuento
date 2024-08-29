@@ -122,40 +122,40 @@ const GenerateTaleForm: React.FC = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-2xl mx-auto mt-8 p-6 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-6 text-[#28405F]">Generar Cuento</h2>
+    <form onSubmit={handleSubmit} className="w-full max-w-2xl mx-auto mt-4 sm:mt-8 p-4 sm:p-6 bg-white rounded-lg shadow-md">
+      <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-[#28405F]">Generar Cuento</h2>
 
       {/* Sección de personajes */}
-      <div className="mb-6">
-        <h3 className="text-xl font-semibold mb-2 text-[#3F69D9]">Personajes</h3>
-        <div className="flex mb-2">
+      <div className="mb-4 sm:mb-6">
+        <h3 className="text-lg sm:text-xl font-semibold mb-2 text-[#3F69D9]">Personajes</h3>
+        <div className="flex flex-col sm:flex-row mb-2">
           <input
             type="text"
             value={newCharacter.name}
             onChange={(e) => setNewCharacter({...newCharacter, name: e.target.value})}
             placeholder="Nombre del personaje"
-            className="flex-grow mr-2 p-2 border rounded"
+            className="flex-grow mb-2 sm:mb-0 sm:mr-2 p-2 border rounded"
           />
           <input
             type="text"
             value={newCharacter.description}
             onChange={(e) => setNewCharacter({...newCharacter, description: e.target.value})}
             placeholder="Descripción"
-            className="flex-grow mr-2 p-2 border rounded"
+            className="flex-grow mb-2 sm:mb-0 sm:mr-2 p-2 border rounded"
           />
           <button
             type="button"
             onClick={handleAddCharacter}
-            className="px-4 py-2 bg-[#3D8BF2] text-white rounded hover:bg-[#3F69D9]"
+            className="w-full sm:w-auto px-4 py-2 bg-[#3D8BF2] text-white rounded hover:bg-[#3F69D9]"
           >
             Añadir
           </button>
         </div>
-        <div className="flex items-center mb-2">
+        <div className="flex flex-col sm:flex-row items-center mb-2">
           <select
             value={selectedSavedCharacter}
             onChange={handleSelectSavedCharacter}
-            className="flex-grow p-2 border rounded mr-2"
+            className="w-full sm:w-auto flex-grow p-2 border rounded mb-2 sm:mb-0 sm:mr-2"
           >
             <option value="">Seleccionar personaje guardado</option>
             {savedCharacters.map(char => (
@@ -165,7 +165,7 @@ const GenerateTaleForm: React.FC = () => {
           <button
             type="button"
             onClick={handleAddSavedCharacter}
-            className="px-4 py-2 bg-[#3D8BF2] text-white rounded hover:bg-[#3F69D9]"
+            className="w-full sm:w-auto px-4 py-2 bg-[#3D8BF2] text-white rounded hover:bg-[#3F69D9]"
             disabled={!selectedSavedCharacter}
           >
             Añadir Seleccionado
@@ -173,16 +173,16 @@ const GenerateTaleForm: React.FC = () => {
         </div>
         <ul className="list-disc pl-5">
           {characters.map((char) => (
-            <li key={char.id} className="mb-1 flex items-center">
-              {char.name} - {char.description}
+            <li key={char.id} className="mb-1 flex flex-wrap items-center">
+              <span className="mr-2">{char.name} - {char.description}</span>
               <button
                 type="button"
                 onClick={() => handleRemoveCharacter(char.id)}
-                className="ml-2 text-[#F24949] hover:text-red-700"
+                className="mr-2 text-[#F24949] hover:text-red-700"
               >
                 Eliminar
               </button>
-              <label className="ml-2 flex items-center">
+              <label className="flex items-center">
                 <input
                   type="checkbox"
                   checked={char.saved}
@@ -296,16 +296,16 @@ const GenerateTaleForm: React.FC = () => {
         <div className="mt-8">
           <h3 className="text-xl font-semibold mb-2 text-[#3F69D9]">Historia Generada</h3>
           <p className="whitespace-pre-wrap">{generatedStory}</p>
-          <div className="mt-4 flex space-x-4">
+          <div className="mt-4 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
             <button 
               onClick={generatePDF}
-              className="px-4 py-2 bg-[#3D8BF2] text-white rounded hover:bg-[#3F69D9]"
+              className="w-full sm:w-auto px-4 py-2 bg-[#3D8BF2] text-white rounded hover:bg-[#3F69D9]"
             >
               Descargar PDF
             </button>
             <button 
               onClick={handleSaveStory}
-              className="px-4 py-2 bg-[#28405F] text-white rounded hover:bg-[#3F69D9]"
+              className="w-full sm:w-auto px-4 py-2 bg-[#28405F] text-white rounded hover:bg-[#3F69D9]"
             >
               Guardar en Biblioteca
             </button>
