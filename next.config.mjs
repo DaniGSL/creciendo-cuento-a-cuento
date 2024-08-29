@@ -6,11 +6,10 @@ const nextConfig = {
     experimental: {
       serverComponentsExternalPackages: ['openai'],
     },
-    // Si necesitas configurar límites de API, hazlo aquí
-    api: {
-      responseLimit: false,
-      bodyParser: {
-        sizeLimit: '1mb',
+    // Configuración para aumentar el límite de tiempo de las funciones serverless
+    serverRuntimeConfig: {
+      functions: {
+        maxDuration: 60, // Aumenta el límite a 60 segundos
       },
     },
   }

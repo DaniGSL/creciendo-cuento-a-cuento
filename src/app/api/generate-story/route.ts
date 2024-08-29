@@ -2,12 +2,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateStory } from '@/app/services/chatgptService';
 
-export const runtime = 'edge'; // Opcional: usa el runtime de Edge si lo prefieres
+// Cambiamos el runtime a 'nodejs' para usar una función serverless
+export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
   try {
     const { prompt } = await request.json();
-    console.log('Prompt recibido:', prompt); // Para depuración
+    console.log('Prompt recibido:', prompt);
 
     if (!prompt) {
       return NextResponse.json({ error: 'El prompt es requerido' }, { status: 400 });
