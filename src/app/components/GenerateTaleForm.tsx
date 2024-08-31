@@ -57,36 +57,69 @@ const GenerateTaleForm: React.FC = () => {
   };
 
   const generatePDF = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault(); // Previene el reenvío del formulario
+    e.preventDefault();
     const doc = new jsPDF();
     
     const lines = generatedStory.split('\n');
     const title = lines[0].trim();
     const content = lines.slice(1).join('\n').trim();
 
-    doc.setFontSize(20);
-    doc.text(title, 20, 20);
+    // Determinar la orientación y formato basado en la longitud del contenido
+    const isLongStory = content.length > 1000;
+    if (isLongStory) {
+      doc.addPage('', 'l');
+    }
 
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 10;
+
+    // Configuración de estilos
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.text(title, pageWidth / 2, margin, { align: "center" });
+
+    doc.setFont("helvetica", "normal");
     doc.setFontSize(12);
-    const splitContent = doc.splitTextToSize(content, 180);
-    let y = 40;
-    splitContent.forEach((line: string) => {
-      if (y > 280) {
-        doc.addPage();
-        y = 20;
+
+    let y = margin + 10;
+    const maxWidth = isLongStory ? (pageWidth - margin * 3) / 2 : pageWidth - margin * 2;
+
+    const splitContent = doc.splitTextToSize(content, maxWidth);
+
+    if (isLongStory) {
+      let leftColumnFull = false;
+      for (let i = 0; i < splitContent.length; i++) {
+        if (y > pageHeight - margin) {
+          if (leftColumnFull) {
+            doc.addPage('', 'l');
+            y = margin;
+            leftColumnFull = false;
+          } else {
+            y = margin;
+            leftColumnFull = true;
+          }
+        }
+        doc.text(splitContent[i], leftColumnFull ? pageWidth / 2 + margin : margin, y);
+        y += 7;
       }
-      doc.text(line, 10, y);
-      y += 7;
-    });
+    } else {
+      for (let i = 0; i < splitContent.length; i++) {
+        if (y > pageHeight - margin) {
+          doc.addPage();
+          y = margin;
+        }
+        doc.text(splitContent[i], margin, y);
+        y += 7;
+      }
+    }
 
     doc.save(`${title}.pdf`);
   };
 
   const handleSaveStory = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault(); // Previene el reenvío del formulario
-    // Aquí iría la lógica para guardar el cuento en la biblioteca
+    e.preventDefault();
     console.log('Guardando cuento en la biblioteca:', generatedStory);
-    // Por ahora, solo mostraremos un mensaje de éxito
     alert('Cuento guardado en la biblioteca');
   };
 
@@ -252,6 +285,7 @@ const GenerateTaleForm: React.FC = () => {
           <option value="">Selecciona un idioma</option>
           <option value="español">Español</option>
           <option value="catalán">Catalán</option>
+          <option value="gallego">Gallego</option>
           <option value="inglés">Inglés</option>
           <option value="francés">Francés</option>
           <option value="alemán">Alemán</option>
