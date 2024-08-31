@@ -84,43 +84,51 @@ const GenerateTaleForm: React.FC = () => {
     let y = margin + titleHeight; // Ajustar posición inicial para el contenido en la primera columna
     const maxWidth = isLongStory ? (pageWidth - margin * 2 - columnGap) / 2 : pageWidth - margin * 2;
   
-    const splitContent = doc.splitTextToSize(content, maxWidth);
+    const splitContent = content.split('\n'); // Divide el contenido en líneas manualmente
   
     if (isLongStory) {
       let leftColumnFull = false;
       let firstPage = true; // Bandera para saber si es la primera página
   
       for (let i = 0; i < splitContent.length; i++) {
-        if (y > pageHeight - margin) {
-          if (leftColumnFull) {
-            doc.addPage('', 'l');
-            y = margin; // Reiniciar y al margen superior en nuevas páginas
-            leftColumnFull = false;
-            firstPage = false; // Ya no es la primera página
-          } else {
-            y = margin;
-            leftColumnFull = true;
+        const splitLine = doc.splitTextToSize(splitContent[i], maxWidth); // Divide cada línea al tamaño permitido
+        
+        for (let j = 0; j < splitLine.length; j++) {
+          if (y > pageHeight - margin) {
+            if (leftColumnFull) {
+              doc.addPage('', 'l');
+              y = margin; // Reiniciar y al margen superior en nuevas páginas
+              leftColumnFull = false;
+              firstPage = false; // Ya no es la primera página
+            } else {
+              y = margin;
+              leftColumnFull = true;
+            }
           }
+          
+          // Solo en la primera columna de la primera página se reserva espacio para el título
+          if (firstPage && !leftColumnFull && i === 0 && j === 0) {
+              y = margin + titleHeight; 
+          } else {
+              y = margin;
+          }
+          
+          doc.text(splitLine[j], leftColumnFull ? pageWidth / 2 + columnGap / 2 : margin, y);
+          y += 7;
         }
-        
-        // Solo en la primera columna de la primera página se reserva espacio para el título
-        if (firstPage && !leftColumnFull) {
-            y = margin + titleHeight; 
-        } else {
-            y = margin;
-        }
-        
-        doc.text(splitContent[i], leftColumnFull ? pageWidth / 2 + columnGap / 2 : margin, y);
-        y += 7;
       }
     } else {
       for (let i = 0; i < splitContent.length; i++) {
-        if (y > pageHeight - margin) {
-          doc.addPage();
-          y = margin; // Reiniciar y al margen superior en nuevas páginas
+        const splitLine = doc.splitTextToSize(splitContent[i], maxWidth); // Divide cada línea al tamaño permitido
+        
+        for (let j = 0; j < splitLine.length; j++) {
+          if (y > pageHeight - margin) {
+            doc.addPage();
+            y = margin; // Reiniciar y al margen superior en nuevas páginas
+          }
+          doc.text(splitLine[j], margin, y);
+          y += 7;
         }
-        doc.text(splitContent[i], margin, y);
-        y += 7;
       }
     }
   
