@@ -69,8 +69,9 @@ const GenerateTaleForm: React.FC = () => {
   
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
-    const margin = 15; // Aumentado el margen
+    const margin = 15;
     const columnGap = 10;
+    const titleHeight = 20; // Altura reservada para el título
   
     // Configuración de estilos
     doc.setFont("helvetica", "bold");
@@ -80,7 +81,7 @@ const GenerateTaleForm: React.FC = () => {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(12);
   
-    let y = margin + 20;
+    let y = margin + titleHeight; // Ajustar posición inicial para el contenido
     const maxWidth = isLongStory ? (pageWidth - margin * 2 - columnGap) / 2 : pageWidth - margin * 2;
   
     const splitContent = doc.splitTextToSize(content, maxWidth);
@@ -91,7 +92,7 @@ const GenerateTaleForm: React.FC = () => {
         if (y > pageHeight - margin) {
           if (leftColumnFull) {
             doc.addPage('', 'l');
-            y = margin;
+            y = margin + titleHeight; // Ajustar la posición después de agregar una nueva página
             leftColumnFull = false;
           } else {
             y = margin;
@@ -105,7 +106,7 @@ const GenerateTaleForm: React.FC = () => {
       for (let i = 0; i < splitContent.length; i++) {
         if (y > pageHeight - margin) {
           doc.addPage();
-          y = margin;
+          y = margin + titleHeight; // Ajustar la posición después de agregar una nueva página
         }
         doc.text(splitContent[i], margin, y);
         y += 7;
