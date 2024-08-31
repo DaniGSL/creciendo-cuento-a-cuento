@@ -58,35 +58,33 @@ const GenerateTaleForm: React.FC = () => {
 
   const generatePDF = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    const doc = new jsPDF();
     
     const lines = generatedStory.split('\n');
     const title = lines[0].trim();
     const content = lines.slice(1).join('\n').trim();
-
+  
     // Determinar la orientación y formato basado en la longitud del contenido
     const isLongStory = content.length > 1000;
-    if (isLongStory) {
-      doc.addPage('', 'l');
-    }
-
+    const doc = new jsPDF(isLongStory ? 'l' : 'p', 'mm', 'a4');
+  
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
-    const margin = 10;
-
+    const margin = 15; // Aumentado el margen
+    const columnGap = 10;
+  
     // Configuración de estilos
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
-    doc.text(title, pageWidth / 2, margin, { align: "center" });
-
+    doc.text(title, margin, margin + 10);
+  
     doc.setFont("helvetica", "normal");
     doc.setFontSize(12);
-
-    let y = margin + 10;
-    const maxWidth = isLongStory ? (pageWidth - margin * 3) / 2 : pageWidth - margin * 2;
-
+  
+    let y = margin + 20;
+    const maxWidth = isLongStory ? (pageWidth - margin * 2 - columnGap) / 2 : pageWidth - margin * 2;
+  
     const splitContent = doc.splitTextToSize(content, maxWidth);
-
+  
     if (isLongStory) {
       let leftColumnFull = false;
       for (let i = 0; i < splitContent.length; i++) {
@@ -100,7 +98,7 @@ const GenerateTaleForm: React.FC = () => {
             leftColumnFull = true;
           }
         }
-        doc.text(splitContent[i], leftColumnFull ? pageWidth / 2 + margin : margin, y);
+        doc.text(splitContent[i], leftColumnFull ? pageWidth / 2 + columnGap / 2 : margin, y);
         y += 7;
       }
     } else {
@@ -113,7 +111,7 @@ const GenerateTaleForm: React.FC = () => {
         y += 7;
       }
     }
-
+  
     doc.save(`${title}.pdf`);
   };
 
