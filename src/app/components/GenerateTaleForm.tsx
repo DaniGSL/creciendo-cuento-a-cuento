@@ -4,6 +4,8 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { jsPDF } from "jspdf";
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 interface Character {
   id: string;
@@ -25,6 +27,9 @@ const GenerateTaleForm: React.FC = () => {
   const [generatedStory, setGeneratedStory] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const { data: session } = useSession();
+  const router = useRouter();
 
   const handleAddCharacter = () => {
     if (newCharacter.name && newCharacter.description) {
@@ -63,16 +68,14 @@ const GenerateTaleForm: React.FC = () => {
     const title = lines[0].trim();
     const content = lines.slice(1).join('\n').trim();
   
-    // Determinar la orientación y formato basado en la longitud del contenido
     const isLongStory = content.length > 1000;
     const doc = new jsPDF(isLongStory ? 'l' : 'p', 'mm', 'a4');
   
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
-    const margin = 15; // Aumentado el margen
+    const margin = 15;
     const columnGap = 10;
   
-    // Configuración de estilos
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
     doc.text(title, margin, margin + 10);
@@ -115,10 +118,35 @@ const GenerateTaleForm: React.FC = () => {
     doc.save(`${title}.pdf`);
   };
 
-  const handleSaveStory = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleSaveStory = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    console.log('Guardando cuento en la biblioteca:', generatedStory);
-    alert('Cuento guardado en la biblioteca');
+    if (!session) {
+      alert('Debes iniciar sesión para guardar cuentos');
+      return;
+    }
+    try {
+      const response = await fetch('/api/stories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: generatedStory.split('\n')[0],
+          content: generatedStory,
+          genre,
+          characters: characters.map(char => char.name),
+          language,
+          readingTime
+        }),
+      });
+      if (response.ok) {
+        alert('Cuento guardado en la biblioteca');
+        router.push('/biblioteca');
+      } else {
+        alert('Error al guardar el cuento');
+      }
+    } catch (error) {
+      console.error('Error al guardar el cuento:', error);
+      alert('Error al guardar el cuento');
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
