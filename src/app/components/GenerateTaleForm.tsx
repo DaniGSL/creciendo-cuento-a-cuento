@@ -71,7 +71,7 @@ const GenerateTaleForm: React.FC = () => {
     const pageHeight = doc.internal.pageSize.getHeight();
     const margin = 15;
     const columnGap = 10;
-    const titleHeight = 20; // Altura reservada para el título
+    const titleHeight = 20; // Altura reservada para el título solo en la primera columna
   
     // Configuración de estilos
     doc.setFont("helvetica", "bold");
@@ -81,24 +81,35 @@ const GenerateTaleForm: React.FC = () => {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(12);
   
-    let y = margin + titleHeight; // Ajustar posición inicial para el contenido
+    let y = margin + titleHeight; // Ajustar posición inicial para el contenido en la primera columna
     const maxWidth = isLongStory ? (pageWidth - margin * 2 - columnGap) / 2 : pageWidth - margin * 2;
   
     const splitContent = doc.splitTextToSize(content, maxWidth);
   
     if (isLongStory) {
       let leftColumnFull = false;
+      let firstPage = true; // Bandera para saber si es la primera página
+  
       for (let i = 0; i < splitContent.length; i++) {
         if (y > pageHeight - margin) {
           if (leftColumnFull) {
             doc.addPage('', 'l');
-            y = margin + titleHeight; // Ajustar la posición después de agregar una nueva página
+            y = margin; // Reiniciar y al margen superior en nuevas páginas
             leftColumnFull = false;
+            firstPage = false; // Ya no es la primera página
           } else {
             y = margin;
             leftColumnFull = true;
           }
         }
+        
+        // Solo en la primera columna de la primera página se reserva espacio para el título
+        if (firstPage && !leftColumnFull) {
+            y = margin + titleHeight; 
+        } else {
+            y = margin;
+        }
+        
         doc.text(splitContent[i], leftColumnFull ? pageWidth / 2 + columnGap / 2 : margin, y);
         y += 7;
       }
@@ -106,7 +117,7 @@ const GenerateTaleForm: React.FC = () => {
       for (let i = 0; i < splitContent.length; i++) {
         if (y > pageHeight - margin) {
           doc.addPage();
-          y = margin + titleHeight; // Ajustar la posición después de agregar una nueva página
+          y = margin; // Reiniciar y al margen superior en nuevas páginas
         }
         doc.text(splitContent[i], margin, y);
         y += 7;
