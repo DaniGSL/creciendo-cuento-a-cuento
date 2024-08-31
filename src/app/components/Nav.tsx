@@ -14,11 +14,30 @@ export default function Nav() {
     router.push('/')
   }
 
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(word => word[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2)
+  }
+
   return (
     <nav className="w-full flex flex-col items-center">
-      <h1 className="text-xl sm:text-2xl font-bold mb-2 text-center">
-        Creciendo cuento a cuento
-      </h1>
+      <div className="w-full flex justify-between items-center mb-2">
+        <h1 className="text-xl sm:text-2xl font-bold text-center">
+          Creciendo cuento a cuento
+        </h1>
+        {session && session.user && (
+          <div className="flex items-center">
+            <span className="mr-2 text-sm hidden sm:inline">{session.user.username}</span>
+            <div className="w-8 h-8 rounded-full bg-[#3F69D9] flex items-center justify-center text-white text-sm font-bold">
+              {getInitials(session.user.username || '')}
+            </div>
+          </div>
+        )}
+      </div>
       <div className="w-full flex flex-col sm:flex-row justify-between items-center">
         <button
           onClick={() => setIsMenuOpen(!isMenuOpen)}

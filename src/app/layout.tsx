@@ -18,7 +18,10 @@ export default function RootLayout({
         <ClientProvider>
           <header className="bg-[#3F69D9] p-4 text-white sticky top-0 z-50">
             <div className="container mx-auto">
-              <Nav />
+              <div className="flex flex-col sm:flex-row justify-between items-center">
+                {/* Eliminamos el título de aquí, ya que debe estar en el componente Nav */}
+                <Nav />
+              </div>
             </div>
           </header>
           <main className="container mx-auto px-4 py-8">

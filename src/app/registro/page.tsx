@@ -1,17 +1,29 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { kv } from '@vercel/kv'
+import bcrypt from 'bcryptjs'
 
 export default function Registro() {
   const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Aquí deberías implementar la lógica para registrar al usuario
-    console.log('Registro:', username, password)
-    // Redirigir al login después del registro
+    const hashedPassword = await bcrypt.hash(password, 10)
+    const user = {
+      id: `user_${Date.now()}`,
+      username,
+      email,
+      password: hashedPassword,
+      registrationDate: new Date().toISOString(),
+      storiesCount: 0,
+      charactersCount: 0,
+      achievements: []
+    }
+    await kv.set(`user:${email}`, JSON.stringify(user))
     router.push('/login')
   }
 
@@ -22,6 +34,13 @@ export default function Registro() {
         value={username}
         onChange={(e) => setUsername(e.target.value)}
         placeholder="Username"
+        className="w-full p-2 mb-4 border rounded"
+      />
+      <input
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder="Email"
         className="w-full p-2 mb-4 border rounded"
       />
       <input

@@ -2,16 +2,19 @@
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    reactStrictMode: true,
-    experimental: {
-      serverComponentsExternalPackages: ['openai'],
+  reactStrictMode: true,
+  experimental: {
+    serverComponentsExternalPackages: ['openai'],
+  },
+  serverRuntimeConfig: {
+    functions: {
+      maxDuration: 60, // Aumenta el límite a 60 segundos
     },
-    // Configuración para aumentar el límite de tiempo de las funciones serverless
-    serverRuntimeConfig: {
-      functions: {
-        maxDuration: 60, // Aumenta el límite a 60 segundos
-      },
-    },
-  }
-  
-  export default nextConfig;
+  },
+  env: {
+    KV_REST_API_URL: process.env.KV_REST_API_URL,
+    KV_REST_API_TOKEN: process.env.KV_REST_API_TOKEN,
+  },
+}
+
+export default nextConfig;
