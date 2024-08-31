@@ -64,7 +64,7 @@ const GenerateTaleForm: React.FC = () => {
     const content = lines.slice(1).join('\n').trim();
   
     // Determinar la orientación y formato basado en la longitud del contenido
-    const isLongStory = content.length > 1000;
+    const isLongStory = content.length > 1300;
     const doc = new jsPDF(isLongStory ? 'l' : 'p', 'mm', 'a4');
   
     const pageWidth = doc.internal.pageSize.getWidth();
