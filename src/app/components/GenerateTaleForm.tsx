@@ -68,13 +68,15 @@ const GenerateTaleForm: React.FC = () => {
     const title = lines[0].trim();
     const content = lines.slice(1).join('\n').trim();
   
-    const isLongStory = content.length > 1000;
+    // Determinar la orientación y formato basado en la longitud del contenido
+    const isLongStory = content.length > 1300;
     const doc = new jsPDF(isLongStory ? 'l' : 'p', 'mm', 'a4');
   
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
     const margin = 15;
     const columnGap = 10;
+    const titleHeight = 20; // Altura reservada para el título
   
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
@@ -83,7 +85,7 @@ const GenerateTaleForm: React.FC = () => {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(12);
   
-    let y = margin + 20;
+    let y = margin + titleHeight; // Ajustar posición inicial para el contenido
     const maxWidth = isLongStory ? (pageWidth - margin * 2 - columnGap) / 2 : pageWidth - margin * 2;
   
     const splitContent = doc.splitTextToSize(content, maxWidth);
@@ -94,7 +96,7 @@ const GenerateTaleForm: React.FC = () => {
         if (y > pageHeight - margin) {
           if (leftColumnFull) {
             doc.addPage('', 'l');
-            y = margin;
+            y = margin + titleHeight; // Ajustar la posición después de agregar una nueva página
             leftColumnFull = false;
           } else {
             y = margin;
@@ -108,7 +110,7 @@ const GenerateTaleForm: React.FC = () => {
       for (let i = 0; i < splitContent.length; i++) {
         if (y > pageHeight - margin) {
           doc.addPage();
-          y = margin;
+          y = margin + titleHeight; // Ajustar la posición después de agregar una nueva página
         }
         doc.text(splitContent[i], margin, y);
         y += 7;
