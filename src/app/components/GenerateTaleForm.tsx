@@ -1,7 +1,7 @@
 // src/app/components/GenerateTaleForm.tsx
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { jsPDF } from "jspdf";
 import { useSession } from 'next-auth/react';
@@ -31,6 +31,26 @@ const GenerateTaleForm: React.FC = () => {
   const { data: session } = useSession();
   const router = useRouter();
 
+  useEffect(() => {
+    if (session) {
+      fetchSavedCharacters();
+    }
+  }, [session]);
+
+  const fetchSavedCharacters = async () => {
+    try {
+      const response = await fetch('/api/characters');
+      if (response.ok) {
+        const data = await response.json();
+        setSavedCharacters(data);
+      } else {
+        console.error('Error fetching saved characters');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+
   const handleAddCharacter = () => {
     if (newCharacter.name && newCharacter.description) {
       const characterToAdd = { ...newCharacter, id: Date.now().toString(), saved: false };
@@ -43,10 +63,27 @@ const GenerateTaleForm: React.FC = () => {
     setCharacters(characters.filter(char => char.id !== id));
   };
 
-  const handleToggleSaveCharacter = (id: string) => {
-    setCharacters(characters.map(char => 
-      char.id === id ? { ...char, saved: !char.saved } : char
-    ));
+  const handleToggleSaveCharacter = async (id: string) => {
+    const characterToSave = characters.find(char => char.id === id);
+    if (characterToSave) {
+      try {
+        const response = await fetch('/api/characters', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(characterToSave),
+        });
+        if (response.ok) {
+          setCharacters(characters.map(char => 
+            char.id === id ? { ...char, saved: true } : char
+          ));
+          fetchSavedCharacters(); // Actualizar la lista de personajes guardados
+        } else {
+          console.error('Error saving character');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
   };
 
   const handleSelectSavedCharacter = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -56,7 +93,7 @@ const GenerateTaleForm: React.FC = () => {
   const handleAddSavedCharacter = () => {
     const characterToAdd = savedCharacters.find(char => char.id === selectedSavedCharacter);
     if (characterToAdd && !characters.some(char => char.id === characterToAdd.id)) {
-      setCharacters([...characters, { ...characterToAdd, saved: false }]);
+      setCharacters([...characters, { ...characterToAdd, saved: true }]);
       setSelectedSavedCharacter('');
     }
   };
@@ -68,7 +105,6 @@ const GenerateTaleForm: React.FC = () => {
     const title = lines[0].trim();
     const content = lines.slice(1).join('\n').trim();
   
-    // Determinar la orientación y formato basado en la longitud del contenido
     const isLongStory = content.length > 1300;
     const doc = new jsPDF(isLongStory ? 'l' : 'p', 'mm', 'a4');
   
@@ -76,7 +112,7 @@ const GenerateTaleForm: React.FC = () => {
     const pageHeight = doc.internal.pageSize.getHeight();
     const margin = 15;
     const columnGap = 10;
-    const titleHeight = 20; // Altura reservada para el título
+    const titleHeight = 20;
   
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
@@ -85,7 +121,7 @@ const GenerateTaleForm: React.FC = () => {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(12);
   
-    let y = margin + titleHeight; // Ajustar posición inicial para el contenido
+    let y = margin + titleHeight;
     const maxWidth = isLongStory ? (pageWidth - margin * 2 - columnGap) / 2 : pageWidth - margin * 2;
   
     const splitContent = doc.splitTextToSize(content, maxWidth);
@@ -96,7 +132,7 @@ const GenerateTaleForm: React.FC = () => {
         if (y > pageHeight - margin) {
           if (leftColumnFull) {
             doc.addPage('', 'l');
-            y = margin + titleHeight; // Ajustar la posición después de agregar una nueva página
+            y = margin + titleHeight;
             leftColumnFull = false;
           } else {
             y = margin;
@@ -110,7 +146,7 @@ const GenerateTaleForm: React.FC = () => {
       for (let i = 0; i < splitContent.length; i++) {
         if (y > pageHeight - margin) {
           doc.addPage();
-          y = margin + titleHeight; // Ajustar la posición después de agregar una nueva página
+          y = margin + titleHeight;
         }
         doc.text(splitContent[i], margin, y);
         y += 7;
@@ -177,9 +213,6 @@ const GenerateTaleForm: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-
-    const charactersToSave = characters.filter(char => char.saved);
-    setSavedCharacters([...savedCharacters, ...charactersToSave]);
   };
 
   return (
@@ -243,15 +276,13 @@ const GenerateTaleForm: React.FC = () => {
               >
                 Eliminar
               </button>
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={char.saved}
-                  onChange={() => handleToggleSaveCharacter(char.id)}
-                  className="mr-1"
-                />
-                Guardar
-              </label>
+              <button
+                type="button"
+                onClick={() => handleToggleSaveCharacter(char.id)}
+                className={`mr-2 ${char.saved ? 'text-green-500' : 'text-[#3D8BF2]'} hover:text-[#3F69D9]`}
+              >
+                {char.saved ? 'Guardado' : 'Guardar'}
+              </button>
             </li>
           ))}
         </ul>

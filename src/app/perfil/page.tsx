@@ -1,15 +1,45 @@
 'use client'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
+
+interface User {
+  username: string;
+  email: string;
+  storiesCount: number;
+  charactersCount: number;
+  achievements: Achievement[];
+}
+
+interface Achievement {
+  name: string;
+  description: string;
+  dateAchieved: string;
+}
 
 export default function Perfil() {
   const { data: session } = useSession()
+  const [user, setUser] = useState<User | null>(null)
 
-  if (!session) {
-    return <div>Por favor, inicia sesión para ver tu perfil.</div>
+  useEffect(() => {
+    if (session) {
+      fetchUserData()
+    }
+  }, [session])
+
+  const fetchUserData = async () => {
+    try {
+      const response = await fetch('/api/user')
+      if (response.ok) {
+        const userData = await response.json()
+        setUser(userData)
+      } else {
+        console.error('Error fetching user data')
+      }
+    } catch (error) {
+      console.error('Error:', error)
+    }
   }
-
-  const user = session.user as any
 
   const getInitials = (name: string) => {
     return name
@@ -20,8 +50,17 @@ export default function Perfil() {
       .slice(0, 2)
   }
 
+  if (!session) {
+    return <div className="text-center mt-8">Por favor, inicia sesión para ver tu perfil.</div>
+  }
+
+  if (!user) {
+    return <div className="text-center mt-8">Cargando datos del usuario...</div>
+  }
+
   return (
     <div className="container mx-auto p-4">
+      <h1 className="text-3xl font-bold mb-6 text-[#28405F]">Mi Perfil</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Información Personal */}
@@ -56,7 +95,7 @@ export default function Perfil() {
         <h2 className="text-xl font-semibold mb-4 text-[#3F69D9]">Tus Logros</h2>
         {user.achievements && user.achievements.length > 0 ? (
           <ul className="list-disc pl-5">
-            {user.achievements.map((achievement: any, index: number) => (
+            {user.achievements.map((achievement: Achievement, index: number) => (
               <li key={index} className="mb-2">
                 <strong>{achievement.name}</strong>: {achievement.description}
                 {achievement.dateAchieved && (
@@ -66,8 +105,21 @@ export default function Perfil() {
             ))}
           </ul>
         ) : (
-          <p>Aún no has conseguido ningún logro. ¡Sigue creando cuentos!</p>
+          <p>Aún no has conseguido ningún logro. ¡Sigue creando cuentos y personajes!</p>
         )}
+      </div>
+
+      {/* Acciones rápidas */}
+      <div className="mt-6 flex flex-wrap gap-4">
+        <Link href="/generar" className="bg-[#3F69D9] text-white px-6 py-3 rounded-lg hover:bg-[#28405F] transition-colors">
+          Crear Nuevo Cuento
+        </Link>
+        <Link href="/personajes" className="bg-[#3D8BF2] text-white px-6 py-3 rounded-lg hover:bg-[#3F69D9] transition-colors">
+          Gestionar Personajes
+        </Link>
+        <Link href="/biblioteca" className="bg-[#28405F] text-white px-6 py-3 rounded-lg hover:bg-[#3F69D9] transition-colors">
+          Ver Biblioteca
+        </Link>
       </div>
     </div>
   )
