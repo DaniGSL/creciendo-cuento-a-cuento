@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 
 interface Character {
   name?: string;
@@ -22,7 +23,7 @@ interface Story {
   createdAt: string;
 }
 
-export default function Biblioteca() {
+function BibliotecaContent() {
   const [stories, setStories] = useState<Story[]>([])
   const [filteredStories, setFilteredStories] = useState<Story[]>([])
   const [searchTerm, setSearchTerm] = useState('')
@@ -39,7 +40,7 @@ export default function Biblioteca() {
   }, [status])
 
   useEffect(() => {
-    const character = searchParams.get('character')
+    const character = searchParams?.get('character')
     if (character) {
       setCharacterFilter(decodeURIComponent(character))
     }
@@ -189,5 +190,13 @@ export default function Biblioteca() {
         </Link>
       </div>
     </div>
+  )
+}
+
+export default function Biblioteca() {
+  return (
+    <Suspense fallback={<div>Cargando...</div>}>
+      <BibliotecaContent />
+    </Suspense>
   )
 }
