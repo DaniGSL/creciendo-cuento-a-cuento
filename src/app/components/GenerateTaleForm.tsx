@@ -1,4 +1,3 @@
-// src/app/components/GenerateTaleForm.tsx
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -11,12 +10,12 @@ interface Character {
   id: string;
   name: string;
   description: string;
-  saved: boolean;
+  toSave: boolean;
 }
 
 const GenerateTaleForm: React.FC = () => {
   const [characters, setCharacters] = useState<Character[]>([]);
-  const [newCharacter, setNewCharacter] = useState<Omit<Character, 'id' | 'saved'>>({ name: '', description: '' });
+  const [newCharacter, setNewCharacter] = useState<Omit<Character, 'id' | 'toSave'>>({ name: '', description: '' });
   const [genre, setGenre] = useState('');
   const [location, setLocation] = useState('');
   const [educationLevel, setEducationLevel] = useState('');
@@ -53,7 +52,7 @@ const GenerateTaleForm: React.FC = () => {
 
   const handleAddCharacter = () => {
     if (newCharacter.name && newCharacter.description) {
-      const characterToAdd = { ...newCharacter, id: Date.now().toString(), saved: false };
+      const characterToAdd = { ...newCharacter, id: Date.now().toString(), toSave: false };
       setCharacters([...characters, characterToAdd]);
       setNewCharacter({ name: '', description: '' });
     }
@@ -63,27 +62,10 @@ const GenerateTaleForm: React.FC = () => {
     setCharacters(characters.filter(char => char.id !== id));
   };
 
-  const handleToggleSaveCharacter = async (id: string) => {
-    const characterToSave = characters.find(char => char.id === id);
-    if (characterToSave) {
-      try {
-        const response = await fetch('/api/characters', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(characterToSave),
-        });
-        if (response.ok) {
-          setCharacters(characters.map(char => 
-            char.id === id ? { ...char, saved: true } : char
-          ));
-          fetchSavedCharacters(); // Actualizar la lista de personajes guardados
-        } else {
-          console.error('Error saving character');
-        }
-      } catch (error) {
-        console.error('Error:', error);
-      }
-    }
+  const handleToggleSaveCharacter = (id: string) => {
+    setCharacters(characters.map(char => 
+      char.id === id ? { ...char, toSave: !char.toSave } : char
+    ));
   };
 
   const handleSelectSavedCharacter = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -93,9 +75,31 @@ const GenerateTaleForm: React.FC = () => {
   const handleAddSavedCharacter = () => {
     const characterToAdd = savedCharacters.find(char => char.id === selectedSavedCharacter);
     if (characterToAdd && !characters.some(char => char.id === characterToAdd.id)) {
-      setCharacters([...characters, { ...characterToAdd, saved: true }]);
+      setCharacters([...characters, { ...characterToAdd, toSave: false }]);
       setSelectedSavedCharacter('');
     }
+  };
+
+  const saveSelectedCharacters = async () => {
+    const charactersToSave = characters.filter(char => char.toSave);
+    for (const char of charactersToSave) {
+      try {
+        const response = await fetch('/api/characters', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: char.name,
+            description: char.description
+          }),
+        });
+        if (!response.ok) {
+          console.error('Error saving character:', char.name);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
+    fetchSavedCharacters(); // Actualizar la lista de personajes guardados
   };
 
   const generatePDF = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -192,6 +196,9 @@ const GenerateTaleForm: React.FC = () => {
     setIsLoading(true);
     setError(null);
 
+    // Guardar personajes seleccionados antes de generar el cuento
+    await saveSelectedCharacters();
+
     const characterDescriptions = characters.map(char => `${char.name}: ${char.description}`).join('\n');
     const prompt = `Genera una historia completa de ${genre} que ocurra en ${location}.
     Los personajes principales son: ${characters.map(char => char.name).join(', ')}.
@@ -276,13 +283,15 @@ const GenerateTaleForm: React.FC = () => {
               >
                 Eliminar
               </button>
-              <button
-                type="button"
-                onClick={() => handleToggleSaveCharacter(char.id)}
-                className={`mr-2 ${char.saved ? 'text-green-500' : 'text-[#3D8BF2]'} hover:text-[#3F69D9]`}
-              >
-                {char.saved ? 'Guardado' : 'Guardar'}
-              </button>
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={char.toSave}
+                  onChange={() => handleToggleSaveCharacter(char.id)}
+                  className="mr-1"
+                />
+                Guardar en galería
+              </label>
             </li>
           ))}
         </ul>

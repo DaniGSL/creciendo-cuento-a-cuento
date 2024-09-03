@@ -1,146 +1,193 @@
 'use client'
-import { useState, useEffect, useCallback } from 'react'
+
+import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
-import { Story } from '@/types/story'
+import { useRouter, useSearchParams } from 'next/navigation'
 
-const ITEMS_PER_PAGE = 10;
+interface Character {
+  name?: string;
+  description?: string;
+}
+
+interface Story {
+  id: string;
+  userId: string;
+  title: string;
+  content: string;
+  genre: string;
+  characters: (Character | string)[];
+  language: string;
+  readingTime: number;
+  createdAt: string;
+}
 
 export default function Biblioteca() {
   const [stories, setStories] = useState<Story[]>([])
   const [filteredStories, setFilteredStories] = useState<Story[]>([])
-  const [currentPage, setCurrentPage] = useState(1)
+  const [searchTerm, setSearchTerm] = useState('')
   const [genreFilter, setGenreFilter] = useState('')
   const [characterFilter, setCharacterFilter] = useState('')
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
+  const router = useRouter()
+  const searchParams = useSearchParams()
 
   useEffect(() => {
-    if (session) {
+    if (status === 'authenticated') {
       fetchStories()
     }
-  }, [session])
+  }, [status])
+
+  useEffect(() => {
+    const character = searchParams.get('character')
+    if (character) {
+      setCharacterFilter(decodeURIComponent(character))
+    }
+  }, [searchParams])
+
+  useEffect(() => {
+    const filtered = stories.filter(story => {
+      const titleMatch = story.title.toLowerCase().includes(searchTerm.toLowerCase())
+      const contentMatch = story.content.toLowerCase().includes(searchTerm.toLowerCase())
+      const genreMatch = story.genre.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .includes(genreFilter.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""))
+      
+      const characterMatch = characterFilter === '' || story.characters.some(char => {
+        if (typeof char === 'string') {
+          return char.toLowerCase().includes(characterFilter.toLowerCase())
+        } else if (char && typeof char === 'object') {
+          return (char.name && char.name.toLowerCase().includes(characterFilter.toLowerCase())) ||
+                 (char.description && char.description.toLowerCase().includes(characterFilter.toLowerCase()))
+        }
+        return false
+      })
+
+      return (titleMatch || contentMatch) && genreMatch && characterMatch
+    })
+    setFilteredStories(filtered)
+  }, [searchTerm, genreFilter, characterFilter, stories])
 
   const fetchStories = async () => {
     try {
       const response = await fetch('/api/stories')
       if (response.ok) {
         const data = await response.json()
-        setStories(data)
+        console.log('Datos recibidos de la API:', data)
+        if (Array.isArray(data.stories)) {
+          setStories(data.stories)
+          setFilteredStories(data.stories)
+        } else {
+          console.error('Los datos recibidos no son un array:', data)
+          setStories([])
+          setFilteredStories([])
+        }
       } else {
-        console.error('Error al obtener los cuentos')
+        console.error('Error fetching stories:', await response.text())
       }
     } catch (error) {
-      console.error('Error al obtener los cuentos:', error)
+      console.error('Error:', error)
     }
   }
 
-  const filterStories = useCallback(() => {
-    let filtered = stories;
-    if (genreFilter) {
-      filtered = filtered.filter(story => story.genre.toLowerCase().includes(genreFilter.toLowerCase()));
-    }
-    if (characterFilter) {
-      filtered = filtered.filter(story => 
-        story.characters.some((char: string) => char.toLowerCase().includes(characterFilter.toLowerCase()))
-      );
-    }
-    setFilteredStories(filtered);
-  }, [stories, genreFilter, characterFilter]);
-
-  useEffect(() => {
-    filterStories();
-  }, [filterStories]);
-
-  const handleDeleteStory = async (storyId: string) => {
-    if (confirm('¿Estás seguro de que quieres eliminar este cuento?')) {
-      try {
-        const response = await fetch(`/api/stories/${storyId}`, {
-          method: 'DELETE',
-        })
-        if (response.ok) {
-          setStories(stories.filter(story => story.id !== storyId))
-        } else {
-          console.error('Error al eliminar el cuento')
-        }
-      } catch (error) {
-        console.error('Error al eliminar el cuento:', error)
-      }
-    }
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value)
   }
 
-  const pageCount = Math.ceil(filteredStories.length / ITEMS_PER_PAGE);
-  const paginatedStories = filteredStories.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
+  const handleGenreFilter = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setGenreFilter(e.target.value)
+  }
 
-  if (!session) {
-    return <div>Por favor, inicia sesión para ver tu biblioteca.</div>
+  const handleCharacterFilter = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCharacterFilter(e.target.value)
+  }
+
+  const clearFilters = () => {
+    setSearchTerm('')
+    setGenreFilter('')
+    setCharacterFilter('')
+    router.push('/biblioteca')
+  }
+
+  const handleStoryClick = (storyId: string) => {
+    router.push(`/cuento/${storyId}`)
+  }
+
+  const renderCharacters = (characters: (Character | string)[]) => {
+    return characters.map(char => {
+      if (typeof char === 'string') return char
+      if (char && char.name) return char.name
+      return ''
+    }).filter(Boolean).join(', ')
+  }
+
+  if (status === 'loading') {
+    return <div className="text-center mt-8">Cargando...</div>
+  }
+
+  if (status === 'unauthenticated') {
+    return <div className="text-center mt-8">Por favor, inicia sesión para ver tu biblioteca.</div>
   }
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6 text-[#28405F]">Tu Biblioteca</h1>
+      <h1 className="text-3xl font-bold mb-4 text-[#28405F]">Mi Biblioteca</h1>
       
-      <div className="mb-4 flex space-x-4">
+      <div className="mb-4 flex flex-wrap items-center">
         <input
           type="text"
-          placeholder="Filtrar por género"
+          placeholder="Buscar cuentos..."
+          value={searchTerm}
+          onChange={handleSearch}
+          className="w-full sm:w-auto flex-grow sm:flex-grow-0 p-2 border rounded mr-2 mb-2 sm:mb-0"
+        />
+        <input
+          type="text"
+          placeholder="Filtrar por género..."
           value={genreFilter}
-          onChange={(e) => setGenreFilter(e.target.value)}
-          className="p-2 border rounded"
+          onChange={handleGenreFilter}
+          className="w-full sm:w-auto flex-grow sm:flex-grow-0 p-2 border rounded mr-2 mb-2 sm:mb-0"
         />
         <input
           type="text"
-          placeholder="Filtrar por personaje"
+          placeholder="Filtrar por personaje..."
           value={characterFilter}
-          onChange={(e) => setCharacterFilter(e.target.value)}
-          className="p-2 border rounded"
+          onChange={handleCharacterFilter}
+          className="w-full sm:w-auto flex-grow sm:flex-grow-0 p-2 border rounded mr-2 mb-2 sm:mb-0"
         />
+        <button
+          onClick={clearFilters}
+          className="w-full sm:w-auto px-4 py-2 bg-[#3D8BF2] text-white rounded hover:bg-[#3F69D9]"
+        >
+          Borrar filtros
+        </button>
       </div>
 
-      {paginatedStories.length === 0 ? (
-        <p>No se encontraron cuentos. ¡Empieza a crear!</p>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {paginatedStories.map((story) => (
-            <div key={story.id} className="bg-white rounded-lg shadow p-4">
-              <h2 className="text-xl font-semibold mb-2 text-[#3F69D9]">{story.title}</h2>
-              <p className="text-sm text-gray-600 mb-2">Género: {story.genre}</p>
-              <p className="text-sm text-gray-600 mb-2">Idioma: {story.language}</p>
-              <p className="text-sm text-gray-600 mb-2">Tiempo de lectura: {story.readingTime} minutos</p>
-              <p className="text-sm text-gray-600 mb-2">Creado el: {new Date(story.createdAt).toLocaleDateString()}</p>
-              <div className="mt-4">
-                <Link href={`/cuento/${story.id}`} className="text-[#3F69D9] hover:underline mr-4">
-                  Leer
-                </Link>
-                <button
-                  onClick={() => handleDeleteStory(story.id)}
-                  className="text-red-500 hover:underline"
-                >
-                  Eliminar
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {filteredStories.map((story) => (
+          <div
+            key={story.id}
+            className="bg-white rounded-lg shadow p-4 cursor-pointer hover:shadow-md transition-shadow"
+            onClick={() => handleStoryClick(story.id)}
+          >
+            <h2 className="text-xl font-semibold mb-2 text-[#3F69D9]">{story.title}</h2>
+            <p className="text-gray-600 mb-2">{story.content.substring(0, 100)}...</p>
+            <p className="text-gray-600 mb-2">Género: {story.genre}</p>
+            <p className="text-gray-600 mb-2">Idioma: {story.language}</p>
+            <p className="text-gray-600">Personajes: {renderCharacters(story.characters)}</p>
+            <p className="text-gray-500 text-sm mt-2">Creado el: {new Date(story.createdAt).toLocaleDateString()}</p>
+          </div>
+        ))}
+      </div>
+
+      {filteredStories.length === 0 && (
+        <p className="text-center mt-8">No se encontraron cuentos. ¡Crea uno nuevo!</p>
       )}
 
-      {pageCount > 1 && (
-        <div className="mt-6 flex justify-center space-x-2">
-          {Array.from({ length: pageCount }, (_, i) => i + 1).map((page) => (
-            <button
-              key={page}
-              onClick={() => setCurrentPage(page)}
-              className={`px-3 py-1 rounded ${
-                currentPage === page ? 'bg-[#3F69D9] text-white' : 'bg-gray-200'
-              }`}
-            >
-              {page}
-            </button>
-          ))}
-        </div>
-      )}
+      <div className="mt-8">
+        <Link href="/generar" className="bg-[#3F69D9] text-white px-4 py-2 rounded hover:bg-[#28405F]">
+          Crear nuevo cuento
+        </Link>
+      </div>
     </div>
   )
 }

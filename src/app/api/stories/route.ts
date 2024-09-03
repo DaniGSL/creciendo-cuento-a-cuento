@@ -18,6 +18,7 @@ interface DBUser {
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions)
   if (!session || !session.user) {
+    console.log('POST: No autorizado')
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
   }
 
@@ -35,53 +36,70 @@ export async function POST(request: Request) {
     createdAt: new Date().toISOString()
   }
 
-  await kv.set(`story:${story.id}`, JSON.stringify(story))
-  
-  // Actualizar el contador de cuentos del usuario
-  const userKey = `user:${session.user.email}`
-  const user = await kv.get(userKey) as DBUser | null
-  if (user) {
-    user.storiesCount = (user.storiesCount || 0) + 1
-    await kv.set(userKey, JSON.stringify(user))
-  }
+  try {
+    const storyKey = `user:${session.user.id}:story:${story.id}`
+    await kv.set(storyKey, JSON.stringify(story))
+    console.log(`Historia guardada: ${story.id} para el usuario ${session.user.id}`)
+    
+    // Verificar que la historia se guardó correctamente
+    const savedStory = await kv.get(storyKey)
+    console.log(`Datos guardados para la historia ${story.id}:`, savedStory)
+    
+    // Actualizar el contador de cuentos del usuario
+    const userKey = `user:${session.user.email}`
+    const user = await kv.get(userKey) as DBUser | null
+    if (user) {
+      user.storiesCount = (user.storiesCount || 0) + 1
+      await kv.set(userKey, JSON.stringify(user))
+      console.log(`Contador de historias actualizado para el usuario ${session.user.email}`)
+    } else {
+      console.log(`Usuario no encontrado en la base de datos: ${session.user.email}`)
+    }
 
-  return NextResponse.json({ success: true, storyId: story.id })
+    return NextResponse.json({ success: true, storyId: story.id })
+  } catch (error) {
+    console.error('Error al guardar la historia:', error)
+    return NextResponse.json({ error: 'Error al guardar la historia' }, { status: 500 })
+  }
 }
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions)
   if (!session || !session.user) {
+    console.log('GET: No autorizado')
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
   }
 
-  const storyKeys = await kv.keys(`story:*`)
-  console.log('Story keys:', storyKeys)
+  try {
+    const storyKeys = await kv.keys(`user:${session.user.id}:story:*`)
+    console.log(`Encontradas ${storyKeys.length} claves de historias para el usuario ${session.user.id}`)
+    
+    const stories: Story[] = []
+    const rawData: any[] = []
 
-  const userStories = await Promise.all(
-    storyKeys.map(async (key) => {
+    for (const key of storyKeys) {
       const storyData = await kv.get(key)
-      console.log(`Story data for key ${key}:`, storyData)
+      console.log(`Datos para la clave ${key}:`, storyData)
+      rawData.push({ key, data: storyData })
       
-      let story: Story;
       if (typeof storyData === 'string') {
         try {
-          story = JSON.parse(storyData)
-        } catch (error) {
-          console.error(`Error parsing story data for key ${key}:`, error)
-          return null
+          const parsedStory = JSON.parse(storyData)
+          stories.push(parsedStory)
+        } catch (parseError) {
+          console.error(`Error al parsear los datos de la historia ${key}:`, parseError)
         }
-      } else if (storyData && typeof storyData === 'object') {
-        story = storyData as Story
+      } else if (storyData !== null && typeof storyData === 'object') {
+        stories.push(storyData as Story)
       } else {
-        console.error(`Invalid story data for key ${key}:`, storyData)
-        return null
+        console.log(`Datos no válidos para la clave ${key}`)
       }
+    }
 
-      return story.userId === session.user.id ? story : null
-    })
-  )
-
-  console.log('User stories:', userStories)
-
-  return NextResponse.json(userStories.filter(Boolean))
+    console.log(`Recuperadas ${stories.length} historias para el usuario ${session.user.id}`)
+    return NextResponse.json({ stories, rawData })
+  } catch (error) {
+    console.error('Error fetching stories:', error)
+    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
+  }
 }

@@ -9,12 +9,15 @@ interface Character {
   id: string;
   name: string;
   description: string;
+  storyCount: number;
 }
 
 export default function Personajes() {
   const [characters, setCharacters] = useState<Character[]>([])
   const [filteredCharacters, setFilteredCharacters] = useState<Character[]>([])
-  const [searchTerm, setSearchTerm] = useState('')
+  const [nameSearchTerm, setNameSearchTerm] = useState('')
+  const [descriptionSearchTerm, setDescriptionSearchTerm] = useState('')
+  const [newCharacter, setNewCharacter] = useState({ name: '', description: '' })
   const { data: session } = useSession()
   const router = useRouter()
 
@@ -26,11 +29,15 @@ export default function Personajes() {
 
   useEffect(() => {
     const filtered = characters.filter(character =>
-      character.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      character.description.toLowerCase().includes(searchTerm.toLowerCase())
+      removeAccents(character.name.toLowerCase()).includes(removeAccents(nameSearchTerm.toLowerCase())) &&
+      removeAccents(character.description.toLowerCase()).includes(removeAccents(descriptionSearchTerm.toLowerCase()))
     )
     setFilteredCharacters(filtered)
-  }, [searchTerm, characters])
+  }, [nameSearchTerm, descriptionSearchTerm, characters])
+
+  const removeAccents = (str: string) => {
+    return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+  }
 
   const fetchCharacters = async () => {
     try {
@@ -47,12 +54,43 @@ export default function Personajes() {
     }
   }
 
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value)
+  const handleNameSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNameSearchTerm(e.target.value)
   }
 
-  const handleCharacterClick = (characterId: string) => {
-    router.push(`/biblioteca?character=${characterId}`)
+  const handleDescriptionSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setDescriptionSearchTerm(e.target.value)
+  }
+
+  const handleCharacterClick = (characterName: string) => {
+    router.push(`/biblioteca?character=${encodeURIComponent(characterName)}`)
+  }
+
+  const handleNewCharacterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNewCharacter({ ...newCharacter, [e.target.name]: e.target.value })
+  }
+
+  const handleCreateCharacter = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (newCharacter.name && newCharacter.description) {
+      try {
+        const response = await fetch('/api/characters', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(newCharacter),
+        })
+        if (response.ok) {
+          fetchCharacters()
+          setNewCharacter({ name: '', description: '' })
+        } else {
+          console.error('Error creating character')
+        }
+      } catch (error) {
+        console.error('Error:', error)
+      }
+    }
   }
 
   if (!session) {
@@ -63,13 +101,20 @@ export default function Personajes() {
     <div className="container mx-auto p-4">
       <h1 className="text-3xl font-bold mb-4 text-[#28405F]">Galería de Personajes</h1>
       
-      <div className="mb-4">
+      <div className="mb-4 flex flex-wrap">
         <input
           type="text"
-          placeholder="Buscar personajes..."
-          value={searchTerm}
-          onChange={handleSearch}
-          className="w-full p-2 border rounded"
+          placeholder="Buscar por nombre..."
+          value={nameSearchTerm}
+          onChange={handleNameSearch}
+          className="w-full sm:w-1/2 p-2 border rounded mr-2 mb-2 sm:mb-0"
+        />
+        <input
+          type="text"
+          placeholder="Buscar por descripción..."
+          value={descriptionSearchTerm}
+          onChange={handleDescriptionSearch}
+          className="w-full sm:w-1/2 p-2 border rounded"
         />
       </div>
 
@@ -78,22 +123,51 @@ export default function Personajes() {
           <div
             key={character.id}
             className="bg-white rounded-lg shadow p-4 cursor-pointer hover:shadow-md transition-shadow"
-            onClick={() => handleCharacterClick(character.id)}
+            onClick={() => handleCharacterClick(character.name)}
           >
             <h2 className="text-xl font-semibold mb-2 text-[#3F69D9]">{character.name}</h2>
-            <p className="text-gray-600">{character.description}</p>
+            <p className="text-gray-600 mb-2">{character.description}</p>
+            <p className="text-gray-500">
+              {character.storyCount > 0
+                ? `Aparece en ${character.storyCount} cuento(s)`
+                : 'Sin cuentos asociados'}
+            </p>
           </div>
         ))}
       </div>
 
       {filteredCharacters.length === 0 && (
-        <p className="text-center mt-8">No se encontraron personajes. ¡Crea uno nuevo en el generador de cuentos!</p>
+        <p className="text-center mt-8">No se encontraron personajes. ¡Crea uno nuevo!</p>
       )}
 
       <div className="mt-8">
-        <Link href="/generar" className="bg-[#3F69D9] text-white px-4 py-2 rounded hover:bg-[#28405F]">
-          Crear nuevo personaje
-        </Link>
+        <h2 className="text-2xl font-bold mb-4 text-[#28405F]">Crear Nuevo Personaje</h2>
+        <form onSubmit={handleCreateCharacter} className="space-y-4">
+          <input
+            type="text"
+            name="name"
+            value={newCharacter.name}
+            onChange={handleNewCharacterChange}
+            placeholder="Nombre del personaje"
+            className="w-full p-2 border rounded"
+            required
+          />
+          <input
+            type="text"
+            name="description"
+            value={newCharacter.description}
+            onChange={handleNewCharacterChange}
+            placeholder="Descripción del personaje"
+            className="w-full p-2 border rounded"
+            required
+          />
+          <button
+            type="submit"
+            className="w-full bg-[#3F69D9] text-white px-4 py-2 rounded hover:bg-[#28405F]"
+          >
+            Crear Personaje
+          </button>
+        </form>
       </div>
     </div>
   )

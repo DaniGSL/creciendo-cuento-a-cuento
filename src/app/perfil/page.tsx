@@ -1,7 +1,7 @@
 'use client'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 
 interface User {
   username: string;
@@ -17,29 +17,58 @@ interface Achievement {
   dateAchieved: string;
 }
 
+interface Story {
+  id: string;
+  title: string;
+  // Añade aquí más propiedades si son necesarias
+}
+
 export default function Perfil() {
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
   const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchUserData = useCallback(async () => {
+    if (status === 'authenticated' && session) {
+      try {
+        setLoading(true)
+        setError(null)
+
+        const [storiesResponse, charactersResponse] = await Promise.all([
+          fetch('/api/stories'),
+          fetch('/api/characters')
+        ]);
+
+        if (storiesResponse.ok && charactersResponse.ok) {
+          const storiesData: { stories: Story[] } = await storiesResponse.json();
+          const charactersData = await charactersResponse.json();
+
+          const userData: User = {
+            username: session.user?.name || 'Usuario',
+            email: session.user?.email || '',
+            storiesCount: storiesData.stories.length,
+            charactersCount: charactersData.length,
+            achievements: (session.user as any)?.achievements || []
+          }
+          setUser(userData)
+        } else {
+          throw new Error('Error al obtener datos de cuentos o personajes');
+        }
+      } catch (error) {
+        console.error('Error al procesar datos del usuario:', error)
+        setError('Error al cargar los datos del usuario')
+      } finally {
+        setLoading(false)
+      }
+    } else if (status === 'unauthenticated') {
+      setLoading(false)
+    }
+  }, [session, status])
 
   useEffect(() => {
-    if (session) {
-      fetchUserData()
-    }
-  }, [session])
-
-  const fetchUserData = async () => {
-    try {
-      const response = await fetch('/api/user')
-      if (response.ok) {
-        const userData = await response.json()
-        setUser(userData)
-      } else {
-        console.error('Error fetching user data')
-      }
-    } catch (error) {
-      console.error('Error:', error)
-    }
-  }
+    fetchUserData()
+  }, [fetchUserData])
 
   const getInitials = (name: string) => {
     return name
@@ -50,12 +79,30 @@ export default function Perfil() {
       .slice(0, 2)
   }
 
-  if (!session) {
+  if (status === 'loading' || loading) {
+    return <div className="text-center mt-8">Cargando datos del usuario...</div>
+  }
+
+  if (status === 'unauthenticated') {
     return <div className="text-center mt-8">Por favor, inicia sesión para ver tu perfil.</div>
   }
 
+  if (error) {
+    return (
+      <div className="text-center mt-8">
+        <p className="text-red-500">Error: {error}</p>
+        <button 
+          onClick={fetchUserData} 
+          className="mt-4 bg-[#3F69D9] text-white px-4 py-2 rounded hover:bg-[#28405F]"
+        >
+          Intentar de nuevo
+        </button>
+      </div>
+    )
+  }
+
   if (!user) {
-    return <div className="text-center mt-8">Cargando datos del usuario...</div>
+    return <div className="text-center mt-8">No se encontraron datos del usuario.</div>
   }
 
   return (
