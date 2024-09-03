@@ -45,7 +45,7 @@ export default function Perfil() {
           const charactersData = await charactersResponse.json();
 
           const userData: User = {
-            username: session.user?.name || 'Usuario',
+            username: session.user?.username || session.user?.name || 'Usuario',
             email: session.user?.email || '',
             storiesCount: storiesData.stories.length,
             charactersCount: charactersData.length,
