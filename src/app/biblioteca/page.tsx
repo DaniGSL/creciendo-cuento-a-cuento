@@ -113,6 +113,24 @@ function BibliotecaContent() {
     router.push(`/cuento/${storyId}`)
   }
 
+  const handleDeleteStory = async (storyId: string) => {
+    if (confirm('¿Estás seguro de que quieres eliminar este cuento?')) {
+      try {
+        const response = await fetch(`/api/stories/${storyId}`, {
+          method: 'DELETE',
+        })
+        if (response.ok) {
+          setStories(stories.filter(story => story.id !== storyId))
+          setFilteredStories(filteredStories.filter(story => story.id !== storyId))
+        } else {
+          console.error('Error al eliminar el cuento')
+        }
+      } catch (error) {
+        console.error('Error al eliminar el cuento:', error)
+      }
+    }
+  }
+
   const renderCharacters = (characters: (Character | string)[]) => {
     return characters.map(char => {
       if (typeof char === 'string') return char
@@ -167,8 +185,7 @@ function BibliotecaContent() {
         {filteredStories.map((story) => (
           <div
             key={story.id}
-            className="bg-white rounded-lg shadow p-4 cursor-pointer hover:shadow-md transition-shadow"
-            onClick={() => handleStoryClick(story.id)}
+            className="bg-white rounded-lg shadow p-4"
           >
             <h2 className="text-xl font-semibold mb-2 text-[#3F69D9]">{story.title}</h2>
             <p className="text-gray-600 mb-2">{story.content.substring(0, 100)}...</p>
@@ -176,6 +193,23 @@ function BibliotecaContent() {
             <p className="text-gray-600 mb-2">Idioma: {story.language}</p>
             <p className="text-gray-600">Personajes: {renderCharacters(story.characters)}</p>
             <p className="text-gray-500 text-sm mt-2">Creado el: {new Date(story.createdAt).toLocaleDateString()}</p>
+            <div className="mt-4 flex justify-between">
+              <button
+                onClick={() => handleStoryClick(story.id)}
+                className="text-[#3F69D9] hover:underline"
+              >
+                Leer
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteStory(story.id);
+                }}
+                className="text-red-500 hover:underline"
+              >
+                Eliminar
+              </button>
+            </div>
           </div>
         ))}
       </div>

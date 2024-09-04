@@ -10,33 +10,39 @@ export async function GET(
 ) {
   const session = await getServerSession(authOptions)
   if (!session || !session.user) {
+    console.log('No autorizado: sesión o usuario no encontrado')
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
   }
 
-  const storyKey = `story:${params.id}`
+  console.log('Usuario autenticado:', session.user.id)
+
+  const storyKey = `user:${session.user.id}:story:${params.id}`
+  console.log('Buscando cuento con clave:', storyKey)
+
   const storyData = await kv.get(storyKey)
-  
-  console.log(`Story data for key ${storyKey}:`, storyData)
+  console.log(`Datos del cuento para la clave ${storyKey}:`, storyData)
+
+  if (!storyData) {
+    console.log(`Cuento no encontrado para la clave ${storyKey}`)
+    return NextResponse.json({ error: 'Cuento no encontrado' }, { status: 404 })
+  }
 
   let story: Story;
   if (typeof storyData === 'string') {
     try {
       story = JSON.parse(storyData)
     } catch (error) {
-      console.error(`Error parsing story data for key ${storyKey}:`, error)
+      console.error(`Error al parsear los datos del cuento para la clave ${storyKey}:`, error)
       return NextResponse.json({ error: 'Error al obtener el cuento' }, { status: 500 })
     }
-  } else if (storyData && typeof storyData === 'object') {
+  } else if (typeof storyData === 'object') {
     story = storyData as Story
   } else {
-    console.error(`Invalid story data for key ${storyKey}:`, storyData)
-    return NextResponse.json({ error: 'Cuento no encontrado' }, { status: 404 })
+    console.error(`Datos del cuento inválidos para la clave ${storyKey}:`, storyData)
+    return NextResponse.json({ error: 'Error al obtener el cuento' }, { status: 500 })
   }
 
-  if (!story || story.userId !== session.user.id) {
-    return NextResponse.json({ error: 'Cuento no encontrado' }, { status: 404 })
-  }
-
+  console.log('Cuento encontrado:', story)
   return NextResponse.json(story)
 }
 
@@ -49,25 +55,25 @@ export async function DELETE(
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
   }
 
-  const storyKey = `story:${params.id}`
+  const storyKey = `user:${session.user.id}:story:${params.id}`
   const storyData = await kv.get(storyKey)
+
+  if (!storyData) {
+    return NextResponse.json({ error: 'Cuento no encontrado' }, { status: 404 })
+  }
 
   let story: Story;
   if (typeof storyData === 'string') {
     try {
       story = JSON.parse(storyData)
     } catch (error) {
-      console.error(`Error parsing story data for key ${storyKey}:`, error)
+      console.error(`Error al parsear los datos del cuento para la clave ${storyKey}:`, error)
       return NextResponse.json({ error: 'Error al eliminar el cuento' }, { status: 500 })
     }
-  } else if (storyData && typeof storyData === 'object') {
+  } else if (typeof storyData === 'object') {
     story = storyData as Story
   } else {
-    return NextResponse.json({ error: 'Cuento no encontrado' }, { status: 404 })
-  }
-
-  if (!story || story.userId !== session.user.id) {
-    return NextResponse.json({ error: 'Cuento no encontrado' }, { status: 404 })
+    return NextResponse.json({ error: 'Error al eliminar el cuento' }, { status: 500 })
   }
 
   await kv.del(storyKey)
