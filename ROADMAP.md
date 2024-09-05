@@ -1,4 +1,4 @@
-# Roadmap del Proyecto
+# ROADMAP del Proyecto "Creciendo cuento a cuento"
 
 ## Fase 1: Configuración y Estructura Básica ✅
 - [x] Inicializar proyecto Next.js
@@ -21,39 +21,46 @@
 - [x] Implementar funcionalidad para guardar cuentos generados
 - [x] Desarrollar sistema de filtrado y paginación para la biblioteca
 
-## Fase 4: Galería de Personajes y Optimización
-- [ ] Implementar galería de personajes por usuario
-- [ ] Crear sistema para guardar y categorizar personajes
-- [ ] Integrar galería de personajes con el formulario de generación de cuentos
+## Fase 4: Optimización y Corrección de Errores
+- [ ] Corregir el conteo de cuentos por personaje
+- [ ] Resolver problemas de formateo en la generación de PDF
+- [ ] Implementar sistema de logros para usuarios
+- [ ] Desarrollar página de administrador con información relevante
+- [ ] Implementar funcionalidad de recuperación de contraseña
 - [ ] Optimizar rendimiento de carga para grandes bibliotecas de cuentos
 - [ ] Implementar caché y estrategias de carga lazy para mejorar la velocidad
 
-## Fase 5: Gamificación y Características Sociales
-- [ ] Diseñar e implementar sistema de logros
-- [ ] Crear funcionalidad para valorar cuentos
-- [ ] Crear funcionalidad para ranking de usuarios según cuentos y personajes generados
-
-## Fase 6: Mejoras de UX/UI y Accesibilidad
+## Fase 5: Mejoras de UX/UI y Accesibilidad
 - [ ] Mejorar la navegación y usabilidad general
 - [ ] Crear tutoriales o guías interactivas para nuevos usuarios
+- [ ] Implementar feedback visual y animaciones para mejorar la experiencia de usuario
+- [ ] Asegurar que la aplicación sea accesible para usuarios con discapacidades
+
+## Fase 6: Características Sociales y Gamificación
+- [ ] Implementar sistema de compartir cuentos
+- [ ] Desarrollar funcionalidad para valorar cuentos de otros usuarios
+- [ ] Crear sistema de logros y badges
+- [ ] Implementar un sistema de ranking basado en la actividad del usuario
 
 ## Fase 7: Expansión y Características Avanzadas
 - [ ] Implementar soporte para múltiples idiomas
+- [ ] Desarrollar un editor de cuentos más avanzado con opciones de personalización
+- [ ] Crear una API para que desarrolladores externos puedan integrar la plataforma
 
 ## Fase 8: Monetización y Escalabilidad
-- [ ] Investigar y implementar opciones de monetización (ej. cuentos premium)
+- [ ] Investigar e implementar opciones de monetización (ej. cuentos premium, suscripciones)
 - [ ] Optimizar la infraestructura para mayor escala
 - [ ] Implementar análisis avanzados de uso y engagement
 - [ ] Desarrollar panel de administración para gestión de contenido y usuarios
 
-## Fase 9: Lanzamiento y Marketing
-- [ ] Realizar pruebas beta con un grupo selecto de usuarios
+## Fase 9: Pruebas y Refinamiento
+- [ ] Realizar pruebas exhaustivas de usabilidad
+- [ ] Implementar pruebas automatizadas (unit tests, integration tests)
+- [ ] Refinar características basadas en el feedback de los usuarios
+- [ ] Optimizar el SEO de la plataforma
+
+## Fase 10: Lanzamiento y Marketing
 - [ ] Preparar materiales de marketing y promoción
 - [ ] Lanzamiento oficial de la plataforma
 - [ ] Implementar estrategia de crecimiento y adquisición de usuarios
-
-## Fase 10: Mantenimiento Continuo y Evolución
-- [ ] Monitorear y responder al feedback de los usuarios
-- [ ] Implementar actualizaciones y nuevas características regularmente
-- [ ] Mantener la seguridad y el rendimiento de la plataforma
-- [ ] Explorar oportunidades de colaboración y expansión
+- [ ] Establecer canales de soporte al usuario
