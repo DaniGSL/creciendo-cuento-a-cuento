@@ -7,6 +7,14 @@ interface Character {
   id: string;
   name: string;
   description: string;
+  storyCount: number;
+}
+
+interface Story {
+  id: string;
+  title: string;
+  content: string;
+  characters?: string[]; // Hacemos que characters sea opcional
 }
 
 export async function GET(req: NextRequest) {
@@ -21,9 +29,18 @@ export async function GET(req: NextRequest) {
     const characters: Character[] = [];
 
     for (const key of charactersKeys) {
-      const character = await kv.get(key);
+      const character = await kv.get(key) as Omit<Character, 'storyCount'>;
       if (character) {
-        characters.push(character as Character);
+        // Obtener el conteo de cuentos para este personaje
+        const storyKeys = await kv.keys(`user:${userId}:story:*`);
+        let storyCount = 0;
+        for (const storyKey of storyKeys) {
+          const story = await kv.get(storyKey) as Story;
+          if (story && story.characters && story.characters.includes(character.name)) {
+            storyCount++;
+          }
+        }
+        characters.push({ ...character, storyCount });
       }
     }
 
@@ -41,7 +58,7 @@ export async function POST(req: NextRequest) {
   }
 
   const userId = session.user.id;
-  const character: Omit<Character, 'id'> = await req.json();
+  const character: Omit<Character, 'id' | 'storyCount'> = await req.json();
 
   if (!character.name || !character.description) {
     return NextResponse.json({ error: "Nombre y descripción son requeridos" }, { status: 400 });
@@ -51,6 +68,7 @@ export async function POST(req: NextRequest) {
     id: `${Date.now()}`,
     name: character.name,
     description: character.description,
+    storyCount: 0
   };
 
   try {

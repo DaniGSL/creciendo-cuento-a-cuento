@@ -44,6 +44,7 @@ export default function Personajes() {
       const response = await fetch('/api/characters')
       if (response.ok) {
         const data = await response.json()
+        // Asumimos que la API ahora devuelve el conteo de cuentos para cada personaje
         setCharacters(data)
         setFilteredCharacters(data)
       } else {
@@ -128,8 +129,10 @@ export default function Personajes() {
             <h2 className="text-xl font-semibold mb-2 text-[#3F69D9]">{character.name}</h2>
             <p className="text-gray-600 mb-2">{character.description}</p>
             <p className="text-gray-500">
-              {character.storyCount > 0
-                ? `Aparece en ${character.storyCount} cuento(s)`
+              {character.storyCount === 1
+                ? `Aparece en 1 cuento`
+                : character.storyCount > 1
+                ? `Aparece en ${character.storyCount} cuentos`
                 : 'Sin cuentos asociados'}
             </p>
           </div>
