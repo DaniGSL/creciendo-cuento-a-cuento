@@ -10,19 +10,25 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@pdf-lib/fontkit": "^1.1.1",
     "@vercel/kv": "^2.0.0",
     "axios": "^1.7.5",
     "bcryptjs": "^2.4.3",
+    "fontkit": "^2.0.4",
     "jspdf": "^2.5.1",
-    "next": "14.2.5",
+    "jspdf-autotable": "^3.8.3",
+    "next": "^14.2.13",
     "next-auth": "^4.24.7",
     "openai": "^4.56.1",
+    "pdf-lib": "^1.17.1",
+    "pdfmake": "^0.2.13",
     "react": "^18",
     "react-dom": "^18"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
+    "@types/pdfmake": "^0.2.9",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "eslint": "^8",

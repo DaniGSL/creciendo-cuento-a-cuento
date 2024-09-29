@@ -31,6 +31,20 @@ body {
   line-height: 1.5;
 }
 
+/* Soporte para idiomas RTL */
+[dir="rtl"] {
+  text-align: right;
+}
+
+/* Otros estilos globales... */
+
+@font-face {
+  font-family: 'NotoSans';
+  src: url('/fonts/NotoSans-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
 /* Utilidades personalizadas */
 @layer utilities {
   .text-balance {
@@ -43,4 +57,12 @@ body {
   body {
     font-size: 14px;
   }
+}
+
+/* Fuentes para pdf */
+@font-face {
+  font-family: 'NotoSans';
+  src: url('/fonts/NotoSans-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
 }

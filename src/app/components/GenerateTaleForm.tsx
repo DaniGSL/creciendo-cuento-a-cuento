@@ -2,15 +2,24 @@
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { jsPDF } from "jspdf";
+// Eliminamos la importación de jsPDF
+// import { jsPDF } from "jspdf";
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+
+// Importamos los tipos necesarios de pdfmake
+import { TDocumentDefinitions, ContentText, Style } from 'pdfmake/interfaces';
 
 interface Character {
   id: string;
   name: string;
   description: string;
   toSave: boolean;
+}
+
+// Definimos una interfaz personalizada que extiende 'Style'
+interface CustomStyle extends Style {
+  direction?: 'ltr' | 'rtl';
 }
 
 const GenerateTaleForm: React.FC = () => {
@@ -102,62 +111,77 @@ const GenerateTaleForm: React.FC = () => {
     fetchSavedCharacters(); // Actualizar la lista de personajes guardados
   };
 
-  const generatePDF = (e: React.MouseEvent<HTMLButtonElement>) => {
+  // Actualizamos la función generatePDF para usar pdfmake
+  const generatePDF = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    
+
+    // Importación dinámica de pdfmake y las fuentes
+    const pdfMake = (await import('pdfmake/build/pdfmake')).default;
+    const pdfFonts: any = await import('pdfmake/build/vfs_fonts'); // Cast a 'any' para evitar errores de tipo
+    const customFonts = (await import('../utils/pdfFonts')).default;
+
+    // Asignamos las fuentes al vfs de pdfmake
+    pdfMake.vfs = {
+      ...pdfFonts.pdfMake.vfs,
+      ...customFonts,
+    };
+
+    // Configuramos las fuentes disponibles
+    pdfMake.fonts = {
+      NotoNaskhArabic: {
+        normal: 'NotoNaskhArabic-Regular.ttf',
+      },
+      NotoNastaliqUrdu: {
+        normal: 'NotoNastaliqUrdu-Regular.ttf',
+      },
+      Roboto: {
+        normal: 'Roboto-Regular.ttf',
+        bold: 'Roboto-Medium.ttf',
+      },
+    };
+
+    // Obtenemos el título y contenido del cuento
     const lines = generatedStory.split('\n');
     const title = lines[0].trim();
     const content = lines.slice(1).join('\n').trim();
-  
-    const isLongStory = content.length > 1300;
-    const doc = new jsPDF(isLongStory ? 'l' : 'p', 'mm', 'a4');
-  
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-    const margin = 15;
-    const columnGap = 10;
-    const titleHeight = 20;
-  
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(16);
-    doc.text(title, margin, margin + 10);
-  
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(12);
-  
-    let y = margin + titleHeight;
-    const maxWidth = isLongStory ? (pageWidth - margin * 2 - columnGap) / 2 : pageWidth - margin * 2;
-  
-    const splitContent = doc.splitTextToSize(content, maxWidth);
-  
-    if (isLongStory) {
-      let leftColumnFull = false;
-      for (let i = 0; i < splitContent.length; i++) {
-        if (y > pageHeight - margin) {
-          if (leftColumnFull) {
-            doc.addPage('', 'l');
-            y = margin + titleHeight;
-            leftColumnFull = false;
-          } else {
-            y = margin;
-            leftColumnFull = true;
-          }
-        }
-        doc.text(splitContent[i], leftColumnFull ? pageWidth / 2 + columnGap / 2 : margin, y);
-        y += 7;
-      }
-    } else {
-      for (let i = 0; i < splitContent.length; i++) {
-        if (y > pageHeight - margin) {
-          doc.addPage();
-          y = margin + titleHeight;
-        }
-        doc.text(splitContent[i], margin, y);
-        y += 7;
-      }
+
+    // Determinamos el idioma y configuramos la fuente y dirección
+    let font = 'Roboto'; // Fuente predeterminada
+    let isRTL = false; // Dirección predeterminada es LTR
+    if (language.toLowerCase() === 'árabe') {
+      font = 'NotoNaskhArabic';
+      isRTL = true;
+    } else if (language.toLowerCase() === 'urdu') {
+      font = 'NotoNastaliqUrdu';
+      isRTL = true;
     }
-  
-    doc.save(`${title}.pdf`);
+
+    // Definimos el documento PDF
+    const docDefinition: TDocumentDefinitions = {
+      content: [
+        {
+          text: title,
+          fontSize: 16,
+          bold: true,
+          margin: [0, 0, 0, 10],
+          alignment: isRTL ? 'right' : 'left',
+        } as ContentText,
+        {
+          text: content,
+          fontSize: 12,
+          alignment: isRTL ? 'right' : 'left',
+        } as ContentText,
+      ],
+      defaultStyle: {
+        font: font,
+        direction: isRTL ? 'rtl' : 'ltr',
+      } as CustomStyle, // Especificamos el tipo personalizado
+      pageOrientation: content.length > 1300 ? 'landscape' : 'portrait',
+      pageMargins: [40, 60, 40, 60],
+    };
+
+    // Generamos y descargamos el PDF
+    pdfMake.createPdf(docDefinition).download(`${title}.pdf`);
   };
 
   const handleSaveStory = async (e: React.MouseEvent<HTMLButtonElement>) => {
