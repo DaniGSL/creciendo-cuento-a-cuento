@@ -130,15 +130,17 @@ const GenerateTaleForm: React.FC = () => {
     pdfMake.fonts = {
       NotoNaskhArabic: {
         normal: 'NotoNaskhArabic-Regular.ttf',
+        bold: 'NotoNaskhArabic-Bold.ttf',
       },
       NotoNastaliqUrdu: {
         normal: 'NotoNastaliqUrdu-Regular.ttf',
+        bold: 'NotoNastaliqUrdu-Bold.ttf',
       },
       Roboto: {
         normal: 'Roboto-Regular.ttf',
         bold: 'Roboto-Medium.ttf',
       },
-    };
+    };    
 
     // Obtenemos el título y contenido del cuento
     const lines = generatedStory.split('\n');
