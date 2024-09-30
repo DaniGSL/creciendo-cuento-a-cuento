@@ -128,6 +128,10 @@ const GenerateTaleForm: React.FC = () => {
 
     // Configuramos las fuentes disponibles
     pdfMake.fonts = {
+      NotoSansArabic: {
+        normal: 'NotoSansArabic-Regular.ttf',
+        bold: 'NotoSansArabic-Bold.ttf',
+      },
       NotoNaskhArabic: {
         normal: 'NotoNaskhArabic-Regular.ttf',
         bold: 'NotoNaskhArabic-Bold.ttf',
@@ -151,10 +155,10 @@ const GenerateTaleForm: React.FC = () => {
     let font = 'Roboto'; // Fuente predeterminada
     let isRTL = false; // Dirección predeterminada es LTR
     if (language.toLowerCase() === 'árabe') {
-      font = 'NotoNaskhArabic';
+      font = 'NotoSansArabic';
       isRTL = true;
     } else if (language.toLowerCase() === 'urdu') {
-      font = 'NotoNastaliqUrdu';
+      font = 'NotoSansArabic';
       isRTL = true;
     }
 
