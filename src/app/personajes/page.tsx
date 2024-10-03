@@ -96,17 +96,20 @@ export default function Personajes() {
     e.stopPropagation();
     if (confirm('¿Estás seguro de que quieres eliminar este personaje?')) {
       try {
-        const response = await fetch(`/api/characters/${id}`, {
+        const response = await fetch(`/api/characters?id=${id}`, {
           method: 'DELETE',
         });
         if (response.ok) {
           setCharacters(characters.filter(character => character.id !== id));
           setFilteredCharacters(filteredCharacters.filter(character => character.id !== id));
         } else {
-          console.error('Error al eliminar el personaje');
+          const errorData = await response.json();
+          console.error('Error al eliminar el personaje:', errorData.error);
+          alert(`Error al eliminar el personaje: ${errorData.error}`);
         }
       } catch (error) {
-        console.error('Error:', error);
+        console.error('Error de red:', error);
+        alert('Error de red al intentar eliminar el personaje');
       }
     }
   };

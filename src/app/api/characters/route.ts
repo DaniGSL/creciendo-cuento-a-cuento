@@ -86,8 +86,8 @@ export async function DELETE(req: NextRequest) {
     }
   
     const userId = session.user.id;
-    const url = new URL(req.url);
-    const characterId = url.pathname.split('/').pop();
+    const { searchParams } = new URL(req.url);
+    const characterId = searchParams.get('id');
   
     if (!characterId) {
       return NextResponse.json({ error: "ID de personaje no proporcionado" }, { status: 400 });
