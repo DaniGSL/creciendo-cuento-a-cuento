@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
 interface Character {
@@ -44,7 +43,6 @@ export default function Personajes() {
       const response = await fetch('/api/characters')
       if (response.ok) {
         const data = await response.json()
-        // Asumimos que la API ahora devuelve el conteo de cuentos para cada personaje
         setCharacters(data)
         setFilteredCharacters(data)
       } else {
@@ -94,6 +92,25 @@ export default function Personajes() {
     }
   }
 
+  const handleDeleteCharacter = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (confirm('¿Estás seguro de que quieres eliminar este personaje?')) {
+      try {
+        const response = await fetch(`/api/characters/${id}`, {
+          method: 'DELETE',
+        });
+        if (response.ok) {
+          setCharacters(characters.filter(character => character.id !== id));
+          setFilteredCharacters(filteredCharacters.filter(character => character.id !== id));
+        } else {
+          console.error('Error al eliminar el personaje');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
+  };
+
   if (!session) {
     return <div className="text-center mt-8">Por favor, inicia sesión para ver tus personajes.</div>
   }
@@ -123,7 +140,7 @@ export default function Personajes() {
         {filteredCharacters.map((character) => (
           <div
             key={character.id}
-            className="bg-white rounded-lg shadow p-4 cursor-pointer hover:shadow-md transition-shadow"
+            className="bg-white rounded-lg shadow p-4 cursor-pointer hover:shadow-md transition-shadow relative"
             onClick={() => handleCharacterClick(character.name)}
           >
             <h2 className="text-xl font-semibold mb-2 text-[#3F69D9]">{character.name}</h2>
@@ -135,6 +152,12 @@ export default function Personajes() {
                 ? `Aparece en ${character.storyCount} cuentos`
                 : 'Sin cuentos asociados'}
             </p>
+            <button
+              onClick={(e) => handleDeleteCharacter(character.id, e)}
+              className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
+            >
+              Eliminar
+            </button>
           </div>
         ))}
       </div>

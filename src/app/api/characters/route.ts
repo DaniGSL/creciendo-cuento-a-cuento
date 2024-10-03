@@ -79,3 +79,31 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
   }
 }
+export async function DELETE(req: NextRequest) {
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user?.id) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+  
+    const userId = session.user.id;
+    const url = new URL(req.url);
+    const characterId = url.pathname.split('/').pop();
+  
+    if (!characterId) {
+      return NextResponse.json({ error: "ID de personaje no proporcionado" }, { status: 400 });
+    }
+  
+    try {
+      const characterKey = `user:${userId}:character:${characterId}`;
+      const deleted = await kv.del(characterKey);
+  
+      if (deleted) {
+        return NextResponse.json({ message: "Personaje eliminado con éxito" }, { status: 200 });
+      } else {
+        return NextResponse.json({ error: "Personaje no encontrado" }, { status: 404 });
+      }
+    } catch (error) {
+      console.error('Error deleting character:', error);
+      return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
+    }
+  }
