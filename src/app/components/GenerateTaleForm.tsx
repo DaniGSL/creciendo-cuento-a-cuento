@@ -9,6 +9,10 @@ import { useRouter } from 'next/navigation';
 
 // Importamos los tipos necesarios de pdfmake
 import { TDocumentDefinitions, ContentText, Style } from 'pdfmake/interfaces';
+// Definimos una interfaz personalizada que extiende TDocumentDefinitions
+interface CustomDocumentDefinitions extends TDocumentDefinitions {
+  columns?: number;
+}
 
 interface Character {
   id: string;
@@ -111,21 +115,20 @@ const GenerateTaleForm: React.FC = () => {
     fetchSavedCharacters(); // Actualizar la lista de personajes guardados
   };
 
-  // Actualizamos la función generatePDF para usar pdfmake
   const generatePDF = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-
+  
     // Importación dinámica de pdfmake y las fuentes
     const pdfMake = (await import('pdfmake/build/pdfmake')).default;
-    const pdfFonts: any = await import('pdfmake/build/vfs_fonts'); // Cast a 'any' para evitar errores de tipo
+    const pdfFonts: any = await import('pdfmake/build/vfs_fonts');
     const customFonts = (await import('../utils/pdfFonts')).default;
-
+  
     // Asignamos las fuentes al vfs de pdfmake
     pdfMake.vfs = {
       ...pdfFonts.pdfMake.vfs,
       ...customFonts,
     };
-
+  
     // Configuramos las fuentes disponibles
     pdfMake.fonts = {
       NotoSansArabic: {
@@ -145,25 +148,22 @@ const GenerateTaleForm: React.FC = () => {
         bold: 'Roboto-Medium.ttf',
       },
     };    
-
+  
     // Obtenemos el título y contenido del cuento
     const lines = generatedStory.split('\n');
     const title = lines[0].trim();
     const content = lines.slice(1).join('\n').trim();
-
+  
     // Determinamos el idioma y configuramos la fuente y dirección
-    let font = 'Roboto'; // Fuente predeterminada
-    let isRTL = false; // Dirección predeterminada es LTR
-    if (language.toLowerCase() === 'árabe') {
-      font = 'NotoSansArabic';
-      isRTL = true;
-    } else if (language.toLowerCase() === 'urdu') {
-      font = 'NotoSansArabic';
+    let font = 'Roboto';
+    let isRTL = false;
+    if (language.toLowerCase() === 'árabe' || language.toLowerCase() === 'urdu') {
+      font = language.toLowerCase() === 'árabe' ? 'NotoSansArabic' : 'NotoNastaliqUrdu';
       isRTL = true;
     }
-
+  
     // Definimos el documento PDF
-    const docDefinition: TDocumentDefinitions = {
+    const docDefinition: CustomDocumentDefinitions = {
       content: [
         {
           text: title,
@@ -181,11 +181,12 @@ const GenerateTaleForm: React.FC = () => {
       defaultStyle: {
         font: font,
         direction: isRTL ? 'rtl' : 'ltr',
-      } as CustomStyle, // Especificamos el tipo personalizado
+      } as CustomStyle,
       pageOrientation: content.length > 1300 ? 'landscape' : 'portrait',
       pageMargins: [40, 60, 40, 60],
+      columns: content.length > 1300 ? 2 : 1,
     };
-
+  
     // Generamos y descargamos el PDF
     pdfMake.createPdf(docDefinition).download(`${title}.pdf`);
   };
