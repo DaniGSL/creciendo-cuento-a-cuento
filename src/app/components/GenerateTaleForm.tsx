@@ -170,16 +170,20 @@ const GenerateTaleForm: React.FC = () => {
       },
     ];
   
+    // Definimos una interfaz personalizada que extiende 'Style'
+    interface CustomStyle extends Style {
+      dir?: 'ltr' | 'rtl';
+    }
+  
     // Definimos el documento PDF
     const docDefinition: CustomDocumentDefinitions = {
       content: pdfContent,
       defaultStyle: {
         font: font,
-        alignment: isRTL ? 'right' : 'left',
-      },
-      pageOrientation: 'portrait',
+        dir: isRTL ? 'rtl' : 'ltr',
+      } as CustomStyle, // Aseguramos que TypeScript reconozca 'dir'
+      pageOrientation: 'portrait', // Siempre en orientación vertical
       pageMargins: [40, 60, 40, 60],
-      rtl: isRTL, // Añadimos esta línea para habilitar RTL globalmente
     };
   
     // Generamos y descargamos el PDF
