@@ -134,14 +134,10 @@ const GenerateTaleForm: React.FC = () => {
       NotoSansArabic: {
         normal: 'NotoSansArabic-Regular.ttf',
         bold: 'NotoSansArabic-Bold.ttf',
-        italics: 'NotoSansArabic-Italic.ttf',
-        bolditalics: 'NotoSansArabic-BoldItalic.ttf'
       },
       Roboto: {
         normal: 'Roboto-Regular.ttf',
         bold: 'Roboto-Medium.ttf',
-        italics: 'Roboto-Italic.ttf',
-        bolditalics: 'Roboto-MediumItalic.ttf'
       },
     };
   
@@ -159,55 +155,35 @@ const GenerateTaleForm: React.FC = () => {
     }
   
     // Creamos el contenido del PDF
-    let pdfContent: any[] = [
+    const pdfContent: any[] = [
       {
         text: title,
         fontSize: 16,
         bold: true,
         margin: [0, 0, 0, 10],
         alignment: isRTL ? 'right' : 'left',
-      }
-    ];
-  
-    // Determinamos si el contenido debe estar en dos columnas
-    const useColumns = content.length > 1300;
-  
-    if (useColumns) {
-      pdfContent.push({
-        columns: [
-          { width: '*', text: '' },
-          {
-            width: 'auto',
-            text: content,
-            fontSize: 12,
-            alignment: isRTL ? 'right' : 'left',
-          },
-          { width: '*', text: '' }
-        ],
-        columnGap: 20
-      });
-    } else {
-      pdfContent.push({
+      },
+      {
         text: content,
         fontSize: 12,
         alignment: isRTL ? 'right' : 'left',
-      });
-    }
+      },
+    ];
   
     // Definimos el documento PDF
-  const docDefinition: CustomDocumentDefinitions = {
-    content: pdfContent,
-    defaultStyle: {
-      font: font,
-    },
-    pageOrientation: useColumns ? 'landscape' : 'portrait',
-    pageMargins: [40, 60, 40, 60],
-  };
-
-  // Aseguramos que la dirección del texto se aplique correctamente
-  if (isRTL) {
-    docDefinition.rtl = true;
-  }
+    const docDefinition: CustomDocumentDefinitions = {
+      content: pdfContent,
+      defaultStyle: {
+        font: font,
+      },
+      pageOrientation: 'portrait', // Siempre en orientación vertical
+      pageMargins: [40, 60, 40, 60],
+    };
+  
+    // Aseguramos que la dirección del texto se aplique correctamente
+    if (isRTL) {
+      docDefinition.rtl = true;
+    }
   
     // Generamos y descargamos el PDF
     try {
