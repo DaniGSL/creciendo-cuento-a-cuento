@@ -9,9 +9,9 @@ import { useRouter } from 'next/navigation';
 
 // Importamos los tipos necesarios de pdfmake
 import { TDocumentDefinitions, ContentText, Style } from 'pdfmake/interfaces';
-// Definimos una interfaz personalizada que extiende TDocumentDefinitions
+  // Extendemos TDocumentDefinitions para incluir la propiedad 'rtl'
 interface CustomDocumentDefinitions extends TDocumentDefinitions {
-  columns?: number;
+  rtl?: boolean;
 }
 
 interface Character {
@@ -134,20 +134,16 @@ const GenerateTaleForm: React.FC = () => {
       NotoSansArabic: {
         normal: 'NotoSansArabic-Regular.ttf',
         bold: 'NotoSansArabic-Bold.ttf',
-      },
-      NotoNaskhArabic: {
-        normal: 'NotoNaskhArabic-Regular.ttf',
-        bold: 'NotoNaskhArabic-Bold.ttf',
-      },
-      NotoNastaliqUrdu: {
-        normal: 'NotoNastaliqUrdu-Regular.ttf',
-        bold: 'NotoNastaliqUrdu-Bold.ttf',
+        italics: 'NotoSansArabic-Italic.ttf',
+        bolditalics: 'NotoSansArabic-BoldItalic.ttf'
       },
       Roboto: {
         normal: 'Roboto-Regular.ttf',
         bold: 'Roboto-Medium.ttf',
+        italics: 'Roboto-Italic.ttf',
+        bolditalics: 'Roboto-MediumItalic.ttf'
       },
-    };    
+    };
   
     // Obtenemos el título y contenido del cuento
     const lines = generatedStory.split('\n');
@@ -158,37 +154,69 @@ const GenerateTaleForm: React.FC = () => {
     let font = 'Roboto';
     let isRTL = false;
     if (language.toLowerCase() === 'árabe' || language.toLowerCase() === 'urdu') {
-      font = language.toLowerCase() === 'árabe' ? 'NotoSansArabic' : 'NotoNastaliqUrdu';
+      font = 'NotoSansArabic';
       isRTL = true;
     }
   
+    // Creamos el contenido del PDF
+    let pdfContent: any[] = [
+      {
+        text: title,
+        fontSize: 16,
+        bold: true,
+        margin: [0, 0, 0, 10],
+        alignment: isRTL ? 'right' : 'left',
+      }
+    ];
+  
+    // Determinamos si el contenido debe estar en dos columnas
+    const useColumns = content.length > 1300;
+  
+    if (useColumns) {
+      pdfContent.push({
+        columns: [
+          { width: '*', text: '' },
+          {
+            width: 'auto',
+            text: content,
+            fontSize: 12,
+            alignment: isRTL ? 'right' : 'left',
+          },
+          { width: '*', text: '' }
+        ],
+        columnGap: 20
+      });
+    } else {
+      pdfContent.push({
+        text: content,
+        fontSize: 12,
+        alignment: isRTL ? 'right' : 'left',
+      });
+    }
+  
     // Definimos el documento PDF
-    const docDefinition: CustomDocumentDefinitions = {
-      content: [
-        {
-          text: title,
-          fontSize: 16,
-          bold: true,
-          margin: [0, 0, 0, 10],
-          alignment: isRTL ? 'right' : 'left',
-        } as ContentText,
-        {
-          text: content,
-          fontSize: 12,
-          alignment: isRTL ? 'right' : 'left',
-        } as ContentText,
-      ],
-      defaultStyle: {
-        font: font,
-        direction: isRTL ? 'rtl' : 'ltr',
-      } as CustomStyle,
-      pageOrientation: content.length > 1300 ? 'landscape' : 'portrait',
-      pageMargins: [40, 60, 40, 60],
-      columns: content.length > 1300 ? 2 : 1,
-    };
+  const docDefinition: CustomDocumentDefinitions = {
+    content: pdfContent,
+    defaultStyle: {
+      font: font,
+    },
+    pageOrientation: useColumns ? 'landscape' : 'portrait',
+    pageMargins: [40, 60, 40, 60],
+  };
+
+  // Aseguramos que la dirección del texto se aplique correctamente
+  if (isRTL) {
+    docDefinition.rtl = true;
+  }
   
     // Generamos y descargamos el PDF
-    pdfMake.createPdf(docDefinition).download(`${title}.pdf`);
+    try {
+      const pdfDocGenerator = pdfMake.createPdf(docDefinition);
+      pdfDocGenerator.download(`${title}.pdf`);
+    } catch (error) {
+      console.error('Error al generar el PDF:', error);
+      alert('Hubo un error al generar el PDF. Por favor, inténtalo de nuevo.');
+    }
   };
 
   const handleSaveStory = async (e: React.MouseEvent<HTMLButtonElement>) => {
