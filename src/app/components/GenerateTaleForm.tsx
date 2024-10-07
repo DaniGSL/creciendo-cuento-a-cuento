@@ -175,15 +175,12 @@ const GenerateTaleForm: React.FC = () => {
       content: pdfContent,
       defaultStyle: {
         font: font,
+        alignment: isRTL ? 'right' : 'left',
       },
-      pageOrientation: 'portrait', // Siempre en orientación vertical
+      pageOrientation: 'portrait',
       pageMargins: [40, 60, 40, 60],
+      rtl: isRTL, // Añadimos esta línea para habilitar RTL globalmente
     };
-  
-    // Aseguramos que la dirección del texto se aplique correctamente
-    if (isRTL) {
-      docDefinition.rtl = true;
-    }
   
     // Generamos y descargamos el PDF
     try {
