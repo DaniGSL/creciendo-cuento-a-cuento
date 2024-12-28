@@ -391,7 +391,7 @@ const GenerateTaleForm: React.FC = () => {
           <option value="gallego">Gallego</option>
           <option value="inglés">Inglés</option>
           <option value="francés">Francés</option>
-          <option value="holandés">Inglés</option>
+          <option value="holandés">Holandés</option>
           <option value="alemán">Alemán</option>
           <option value="urdu">Urdu</option>
           <option value="árabe">Árabe</option>
